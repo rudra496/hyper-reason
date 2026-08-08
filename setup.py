@@ -4,7 +4,7 @@ setup(
     name="hyper-reason",
     version="1.0.0",
     description="Autonomous Test-Time Compute Scaling & Dynamic KV-Cache Sparsification for Edge & Local LLMs",
-    long_description=open("README.txt", encoding="utf-8").read(),
+    long_description="Autonomous Test-Time Compute Scaling & Dynamic KV-Cache Sparsification for Edge & Local LLMs",
     long_description_content_type="text/plain",
     author="Rudra Sarker",
     author_email="rudrasarker130@gmail.com",
