@@ -12,6 +12,9 @@ from .pytorch_wrapper import PyTorchKVCacheHook
 from .ollama_adapter import OllamaModelAdapter
 from .vllm_adapter import VLLMPagedAttentionHook
 from .datasets import GSM8KDataset, BenchmarkEvaluator
+from .flash_kv import FlashKVTreeManager, KVBlock
+from .speculative import SpeculativeTreeEngine
+from .wrapper import wrap_model, WrappedReasoningModel
 
 __version__ = "1.0.0"
 __author__ = "Rudra Sarker"
@@ -30,4 +33,9 @@ __all__ = [
     "VLLMPagedAttentionHook",
     "GSM8KDataset",
     "BenchmarkEvaluator",
+    "FlashKVTreeManager",
+    "KVBlock",
+    "SpeculativeTreeEngine",
+    "wrap_model",
+    "WrappedReasoningModel",
 ]

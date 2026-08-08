@@ -1,6 +1,6 @@
 """
 Comprehensive Unit Test Suite for HyperReason Engine
-Tests MCTS engine, KV compressor, dynamic verifiers, datasets, vllm adapters, and CLI interfaces.
+Tests MCTS engine, KV compressor, FlashKV zero-copy manager, speculative tree engine, datasets, and wrap_model API.
 """
 
 import unittest
@@ -14,7 +14,10 @@ from hyper_reason import (
     GSM8KDataset,
     BenchmarkEvaluator,
     VLLMPagedAttentionHook,
-    OllamaModelAdapter
+    OllamaModelAdapter,
+    FlashKVTreeManager,
+    SpeculativeTreeEngine,
+    wrap_model
 )
 
 
@@ -29,6 +32,33 @@ class TestFullHyperReasonSuite(unittest.TestCase):
         self.assertIsNotNone(root)
         self.assertIn("29", meta.get("consensus_boxed_answer", ""))
         self.assertGreater(meta.get("consensus_confidence", 0), 0)
+
+    def test_flash_kv_zero_copy_manager(self):
+        flash_kv = FlashKVTreeManager(block_size=16)
+        root_blocks = flash_kv.allocate_root_blocks(node_id=0, seq_len=64)
+        self.assertEqual(len(root_blocks), 4)
+
+        child_blocks = flash_kv.branch_child_node(parent_node_id=0, child_node_id=1, new_tokens_count=16)
+        self.assertEqual(len(child_blocks), 5)
+
+        stats = flash_kv.get_memory_stats()
+        self.assertGreater(stats["saved_vram_mb"], 0.0)
+
+    def test_speculative_tree_engine(self):
+        spec_engine = SpeculativeTreeEngine()
+        branches = spec_engine.generate_speculative_branches("Step 1: Test step state", num_branches=4)
+        self.assertEqual(len(branches), 4)
+        
+        stats = spec_engine.get_speculative_stats()
+        self.assertIn("acceptance_rate_pct", stats)
+
+    def test_wrap_model_api(self):
+        dummy_model = "dummy_llm"
+        wrapped = wrap_model(dummy_model)
+        res = wrapped.reason("If 4 workers build a wall in 6 hours, how many hours for 8 workers?")
+        
+        self.assertIn("solution_trajectory", res)
+        self.assertIn("flash_kv_stats", res["metrics"])
 
     def test_gsm8k_dataset_loader(self):
         dataset = GSM8KDataset().get_problems()
