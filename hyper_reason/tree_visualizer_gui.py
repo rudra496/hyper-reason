@@ -6,7 +6,7 @@ License: MIT
 Generates standalone interactive HTML visual search tree diagrams of MCTS rollout trajectories.
 """
 
-from typing import Optional
+from typing import Optional, List, Dict, Any
 from .mcts_engine import TreeNode
 
 
@@ -48,7 +48,7 @@ class HTMLTreeVisualizer:
     </style>
 </head>
 <body>
-    <h1>⚡ HyperReason Tree Search Rollout Graph</h1>
+    <h1>⚡ HyperReason Interactive Search Tree</h1>
     <div id="tree">
 """
         for n in nodes_data:

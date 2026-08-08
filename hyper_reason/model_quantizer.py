@@ -7,7 +7,7 @@ Dynamically quantizes key-value float tensors to INT8 or INT4 representations du
 providing an additional 50% memory reduction on top of FlashKV.
 """
 
-from typing import Dict, Tuple, Any, Optional
+from typing import Dict, Tuple, List, Any, Optional
 import math
 
 class KVQuantizer:
