@@ -1,6 +1,6 @@
 """
 Comprehensive Unit Test Suite for HyperReason Engine
-Tests MCTS engine, KV compressor, FlashKV zero-copy manager, speculative tree engine, trace exporters, search presets, and cost analyzers.
+Tests MCTS engine, KV compressor, FlashKV zero-copy manager, speculative tree engine, trace exporters, search presets, cost analyzers, quantizers, multi-agent trees, and HTML visualizers.
 """
 
 import unittest
@@ -20,7 +20,10 @@ from hyper_reason import (
     wrap_model,
     TreeTraceExporter,
     SearchPresets,
-    CostEfficiencyAnalyzer
+    CostEfficiencyAnalyzer,
+    KVQuantizer,
+    MultiAgentReasonTree,
+    HTMLTreeVisualizer
 )
 
 
@@ -54,6 +57,28 @@ class TestFullHyperReasonSuite(unittest.TestCase):
         
         stats = spec_engine.get_speculative_stats()
         self.assertIn("acceptance_rate_pct", stats)
+
+    def test_kv_quantizer(self):
+        quantizer = KVQuantizer(quant_bits=8)
+        quantized, scale, zero_pt = quantizer.quantize_values([0.5, -0.2, 0.9, -0.8])
+        self.assertEqual(len(quantized), 4)
+        
+        stats = quantizer.get_quantization_stats(original_count=1024)
+        self.assertEqual(stats["quantization_bits"], 8)
+
+    def test_multi_agent_tree(self):
+        agent_tree = MultiAgentReasonTree()
+        res = agent_tree.run_collaborative_mcts("Solve 2 + 2")
+        self.assertIn("multi_agent_collaboration", res["metrics"])
+
+    def test_html_tree_visualizer(self):
+        root = TreeNode("Root state")
+        child = TreeNode("Child state", parent=root)
+        root.children.append(child)
+
+        html_vis = HTMLTreeVisualizer(root)
+        html_str = html_vis.export_html()
+        self.assertIn("HyperReason Interactive Search Tree", html_str)
 
     def test_wrap_model_api(self):
         dummy_model = "dummy_llm"
