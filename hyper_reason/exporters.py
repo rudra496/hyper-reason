@@ -1,13 +1,13 @@
 """
 Trace Exporters & Visualization Formatter Module
-Author: Rudra Sarker (Rudra Sir) & Buggz
+Author: Rudra Sarker & Buggz
 License: MIT
 
 Exports MCTS reasoning tree trajectories to JSON, Markdown, LaTeX, or interactive HTML formats.
 """
 
 import json
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from .mcts_engine import TreeNode
 
 
@@ -37,8 +37,9 @@ class TreeTraceExporter:
 
     def to_markdown(self) -> str:
         """Exports best reasoning path as GitHub-Flavored Markdown document."""
+        root_first_line = self.root.state_text.splitlines()[0] if self.root.state_text else ""
         lines = ["# HyperReason Solution Trajectory\n"]
-        lines.append(f"**Root Prompt**: {self.root.state_text.split('\n')[0]}\n")
+        lines.append(f"**Root Prompt**: {root_first_line}\n")
         lines.append("## Reasoning Search Steps:\n")
 
         curr = self.root
@@ -46,7 +47,7 @@ class TreeTraceExporter:
         while curr.children:
             curr = max(curr.children, key=lambda c: c.visit_count)
             lines.append(f"### Step {step_idx} (Visits: {curr.visit_count}, Value: {curr.mean_value:.3f}, Entropy: {curr.entropy:.2f})")
-            last_line = curr.state_text.split("\n")[-1]
+            last_line = curr.state_text.splitlines()[-1] if curr.state_text else ""
             lines.append(f"```text\n{last_line}\n```\n")
             step_idx += 1
 
