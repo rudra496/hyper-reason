@@ -1,6 +1,6 @@
 """
 Comprehensive Unit Test Suite for HyperReason Engine
-Tests MCTS engine, KV compressor, FlashKV zero-copy manager, speculative tree engine, trace exporters, search presets, cost analyzers, quantizers, multi-agent trees, and HTML visualizers.
+Tests MCTS engine, KV compressor, FlashKV zero-copy manager, speculative tree engine, trace exporters, search presets, cost analyzers, quantizers, multi-agent trees, 3D visualizers, and memory stores.
 """
 
 import unittest
@@ -23,7 +23,9 @@ from hyper_reason import (
     CostEfficiencyAnalyzer,
     KVQuantizer,
     MultiAgentReasonTree,
-    HTMLTreeVisualizer
+    HTMLTreeVisualizer,
+    ThreeDTreeVisualizer,
+    ReasoningMemoryStore
 )
 
 
@@ -49,6 +51,24 @@ class TestFullHyperReasonSuite(unittest.TestCase):
 
         stats = flash_kv.get_memory_stats()
         self.assertGreater(stats["saved_vram_mb"], 0.0)
+
+    def test_3d_tree_visualizer(self):
+        root = TreeNode("Root state")
+        vis_3d = ThreeDTreeVisualizer(root)
+        html_code = vis_3d.export_3d_html()
+        self.assertIn("HyperReason 3D Search Graph", html_code)
+
+    def test_reasoning_memory_store(self):
+        memory = ReasoningMemoryStore()
+        memory.store_trajectory(
+            prompt="Test math problem",
+            solution_trajectory="Step 1: Test step",
+            boxed_answer="42",
+            confidence=0.95
+        )
+        recalled = memory.recall_trajectory("Test math problem")
+        self.assertIsNotNone(recalled)
+        self.assertEqual(recalled["boxed_answer"], "42")
 
     def test_speculative_tree_engine(self):
         spec_engine = SpeculativeTreeEngine()

@@ -21,6 +21,8 @@ from .cost_analyzer import CostEfficiencyAnalyzer
 from .model_quantizer import KVQuantizer
 from .multi_agent_tree import MultiAgentReasonTree
 from .tree_visualizer_gui import HTMLTreeVisualizer
+from .tree_visualizer_3d import ThreeDTreeVisualizer
+from .agent_memory import ReasoningMemoryStore
 
 __version__ = "1.0.0"
 __author__ = "Rudra Sarker"
@@ -50,4 +52,6 @@ __all__ = [
     "KVQuantizer",
     "MultiAgentReasonTree",
     "HTMLTreeVisualizer",
+    "ThreeDTreeVisualizer",
+    "ReasoningMemoryStore",
 ]
