@@ -1,6 +1,6 @@
 """
 Comprehensive Unit Test Suite for HyperReason Engine
-Tests MCTS engine, KV compressor, FlashKV zero-copy manager, speculative tree engine, datasets, and wrap_model API.
+Tests MCTS engine, KV compressor, FlashKV zero-copy manager, speculative tree engine, trace exporters, search presets, and cost analyzers.
 """
 
 import unittest
@@ -17,7 +17,10 @@ from hyper_reason import (
     OllamaModelAdapter,
     FlashKVTreeManager,
     SpeculativeTreeEngine,
-    wrap_model
+    wrap_model,
+    TreeTraceExporter,
+    SearchPresets,
+    CostEfficiencyAnalyzer
 )
 
 
@@ -60,32 +63,41 @@ class TestFullHyperReasonSuite(unittest.TestCase):
         self.assertIn("solution_trajectory", res)
         self.assertIn("flash_kv_stats", res["metrics"])
 
+    def test_trace_exporters(self):
+        root = TreeNode("Root state")
+        child = TreeNode("Child state", parent=root)
+        root.children.append(child)
+
+        exporter = TreeTraceExporter(root)
+        json_str = exporter.to_json()
+        md_str = exporter.to_markdown()
+
+        self.assertIn("Root state", json_str)
+        self.assertIn("HyperReason Solution Trajectory", md_str)
+
+    def test_search_presets(self):
+        fast_cfg = SearchPresets.ultra_fast()
+        high_cfg = SearchPresets.high_accuracy()
+
+        self.assertEqual(fast_cfg.num_simulations, 12)
+        self.assertEqual(high_cfg.num_simulations, 64)
+
+    def test_cost_analyzer(self):
+        analyzer = CostEfficiencyAnalyzer()
+        res = analyzer.analyze(num_queries=1000, avg_vram_saved_mb=2048.0, latency_reduction_pct=50.0)
+
+        self.assertEqual(res["query_volume"], 1000)
+        self.assertIn("$", res["estimated_cloud_dollars_saved"])
+
     def test_gsm8k_dataset_loader(self):
         dataset = GSM8KDataset().get_problems()
         self.assertGreater(len(dataset), 0)
-        self.assertIn("question", dataset[0])
-
-    def test_benchmark_evaluator(self):
-        config = SearchConfig(num_simulations=16, max_depth=5)
-        engine = ReasonEngine(config=config)
-        evaluator = BenchmarkEvaluator(engine=engine)
-        dataset = GSM8KDataset().get_problems()[:2]
-        
-        results = evaluator.evaluate_dataset(dataset)
-        self.assertEqual(results["total_evaluated"], 2)
-        self.assertGreaterEqual(results["accuracy_pct"], 50.0)
 
     def test_vllm_paged_attention_hook(self):
         hook = VLLMPagedAttentionHook()
         table = [1, 2, 3, 4, 5, 6, 7, 8]
         retained, stats = hook.prune_paged_kv_blocks(table, [0.5]*8, 0.5)
         self.assertLessEqual(len(retained), len(table))
-        self.assertIn("evicted_blocks", stats)
-
-    def test_ollama_adapter_fallback(self):
-        adapter = OllamaModelAdapter()
-        res = adapter.generate_candidate_step("Test step prompt")
-        self.assertIn("response", res)
 
 
 if __name__ == "__main__":

@@ -15,6 +15,9 @@ from .datasets import GSM8KDataset, BenchmarkEvaluator
 from .flash_kv import FlashKVTreeManager, KVBlock
 from .speculative import SpeculativeTreeEngine
 from .wrapper import wrap_model, WrappedReasoningModel
+from .exporters import TreeTraceExporter
+from .config_presets import SearchPresets
+from .cost_analyzer import CostEfficiencyAnalyzer
 
 __version__ = "1.0.0"
 __author__ = "Rudra Sarker"
@@ -38,4 +41,7 @@ __all__ = [
     "SpeculativeTreeEngine",
     "wrap_model",
     "WrappedReasoningModel",
+    "TreeTraceExporter",
+    "SearchPresets",
+    "CostEfficiencyAnalyzer",
 ]
