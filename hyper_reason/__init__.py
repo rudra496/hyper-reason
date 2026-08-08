@@ -10,6 +10,8 @@ from .verifier import SelfConsistencyVerifier, StepValueEvaluator
 from .terminal_visualizer import TreeVisualizer
 from .pytorch_wrapper import PyTorchKVCacheHook
 from .ollama_adapter import OllamaModelAdapter
+from .vllm_adapter import VLLMPagedAttentionHook
+from .datasets import GSM8KDataset, BenchmarkEvaluator
 
 __version__ = "1.0.0"
 __author__ = "Rudra Sarker"
@@ -25,4 +27,7 @@ __all__ = [
     "TreeVisualizer",
     "PyTorchKVCacheHook",
     "OllamaModelAdapter",
+    "VLLMPagedAttentionHook",
+    "GSM8KDataset",
+    "BenchmarkEvaluator",
 ]
