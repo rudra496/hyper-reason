@@ -62,7 +62,7 @@ hyper-reason --problem "If a train travels 60mph for 3.5h, how far?" --backend g
 **The honest reading:** GLM-4.6 is already near the ceiling on easy GSM8K, so a *modest-budget*
 search underperforms greedy here. Test-time search pays off on **harder problems / weaker base
 models / bigger budgets** — not on a strong model at its ease. We publish the loss, not a fake
-win. Re-run / scale it: `python eval/gsm8k_mini.py --n 100 --sims 16 --k 4`. Full disclosure in
+win. **Not a claim of SOTA.** Re-run / scale it: `python eval/gsm8k_mini.py --n 100 --sims 16 --k 4`. Full disclosure in
 [`eval/CONFIG.md`](eval/CONFIG.md); raw per-problem traces in [`eval/runs/`](eval/runs/).
 
 ## What's real vs. labeled

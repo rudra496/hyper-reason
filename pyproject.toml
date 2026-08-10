@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "hyper-reason"
-version = "2.0.0.dev0"
+version = "2.0.0"
 description = "Honest test-time compute (AE-MCTS) + projected KV-cache memory accounting for local/edge LLMs. Every metric is real or explicitly labeled simulated."
 readme = "README.txt"
 requires-python = ">=3.10"

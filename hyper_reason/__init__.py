@@ -41,7 +41,7 @@ from .config_presets import SearchPresets
 from .agent_memory import ReasoningMemoryStore
 from .cost_analyzer import CostEfficiencyAnalyzer
 
-__version__ = "2.0.0.dev0"
+__version__ = "2.0.0"
 __author__ = "Rudra Sarker"
 
 __all__ = [
