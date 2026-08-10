@@ -15,6 +15,8 @@ from .mock_backend import MockBackend
 from .glm_backend import GLMBackend
 from .ollama_backend import OllamaBackend
 
+from .openai_backend import OpenAIBackend
+
 try:  # optional: pip install torch transformers
     from .transformers_backend import TransformersBackend
 except Exception:  # pragma: no cover
@@ -26,6 +28,7 @@ __all__ = [
     "count_tokens",
     "MockBackend",
     "GLMBackend",
+    "OpenAIBackend",
     "OllamaBackend",
     "TransformersBackend",
 ]

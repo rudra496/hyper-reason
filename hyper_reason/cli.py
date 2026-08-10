@@ -5,26 +5,30 @@ from __future__ import annotations
 import argparse
 import sys
 
-from .backends import MockBackend, GLMBackend, OllamaBackend
+from .backends import MockBackend, GLMBackend, OllamaBackend, OpenAIBackend
 from .config_presets import SearchPresets
 from .wrapper import wrap_model
 
 
-def _backend_for(name: str):
+def _backend_for(name: str, model_name: str | None = None, api_key: str | None = None):
     name = (name or "mock").lower()
     if name == "mock":
         return MockBackend()
     if name == "glm":
-        return GLMBackend()
+        return GLMBackend(model=model_name or "glm-4.6", api_key=api_key)
+    if name == "openai":
+        return OpenAIBackend(model=model_name or "gpt-4o-mini", api_key=api_key)
     if name == "ollama":
-        return OllamaBackend()
-    raise SystemExit(f"unknown backend '{name}' (choose: mock, glm, ollama)")
+        return OllamaBackend(model=model_name or "llama3:8b")
+    raise SystemExit(f"unknown backend '{name}' (choose: mock, glm, openai, ollama)")
 
 
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(prog="hyper-reason", description="HyperReason AE-MCTS reasoner")
     p.add_argument("--problem", "-p", required=True, help="problem text to reason about")
-    p.add_argument("--backend", "-b", default="mock", choices=["mock", "glm", "ollama"])
+    p.add_argument("--backend", "-b", default="mock", choices=["mock", "glm", "openai", "ollama"])
+    p.add_argument("--model", "-m", default=None, help="override model name (e.g. gpt-4o, glm-4.6, llama3)")
+    p.add_argument("--api-key", default=None, help="override API key")
     p.add_argument("--preset", default="balanced",
                    choices=["ultra_fast", "balanced", "high_accuracy"])
     p.add_argument("--sims", type=int, default=None, help="override num_simulations")
@@ -36,7 +40,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.sims:
         preset.num_simulations = args.sims
 
-    model = wrap_model(_backend_for(args.backend), config=preset)
+    model = wrap_model(_backend_for(args.backend, model_name=args.model, api_key=args.api_key), config=preset)
     result = model.reason(args.problem)
     m = result["metrics"]
 

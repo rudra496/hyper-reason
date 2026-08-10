@@ -14,6 +14,7 @@ from hyper_reason.backends import (
     ModelBackend,
     MockBackend,
     GLMBackend,
+    OpenAIBackend,
     OllamaBackend,
     TransformersBackend,
 )
@@ -71,6 +72,19 @@ class TestGLMBackendLive:
         monkeypatch.delenv("ZAI_API_KEY", raising=False)
         with pytest.raises(RuntimeError):
             GLMBackend(model="glm-4.6")
+
+
+class TestOpenAIBackend:
+    def test_requires_key_for_remote(self, monkeypatch):
+        monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+        with pytest.raises(RuntimeError):
+            OpenAIBackend(model="gpt-4o-mini")
+
+    def test_allows_local_without_key(self, monkeypatch):
+        monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+        be = OpenAIBackend(model="local-model", base_url="http://127.0.0.1:8000/v1")
+        assert be.is_live is True
+        assert "openai" in be.name
 
 
 class TestOllamaBackendNoFakeFallback:

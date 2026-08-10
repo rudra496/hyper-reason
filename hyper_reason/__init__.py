@@ -10,6 +10,7 @@ from .backends import (
     count_tokens,
     MockBackend,
     GLMBackend,
+    OpenAIBackend,
     OllamaBackend,
     TransformersBackend,
 )
@@ -47,7 +48,7 @@ __author__ = "Rudra Sarker"
 __all__ = [
     # backends
     "Sample", "ModelBackend", "count_tokens",
-    "MockBackend", "GLMBackend", "OllamaBackend", "TransformersBackend",
+    "MockBackend", "GLMBackend", "OpenAIBackend", "OllamaBackend", "TransformersBackend",
     # engine
     "SearchConfig", "ReasonEngine", "TreeNode",
     "shannon", "shannon_from_counts", "compute_salience",
