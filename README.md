@@ -1,120 +1,164 @@
 <div align="center">
 
-# ⚡ HyperReason
+![HyperReason Banner](assets/banner.png)
 
-### A test-time-compute (AE-MCTS) engine that **actually runs** — and reports when it loses.
+# ⚡ HyperReason (`hypermcts`)
+
+### An honest, multi-provider Adaptive-Entropy MCTS test-time compute engine for LLMs — that **actually runs** and reports when it loses.
 
 [![tests](https://github.com/rudra496/hyper-reason/actions/workflows/ci.yml/badge.svg)](https://github.com/rudra496/hyper-reason/actions/workflows/ci.yml)
+[![PyPI version](https://img.shields.io/pypi/v/hypermcts.svg)](https://pypi.org/project/hypermcts/)
 [![Live demo](https://img.shields.io/badge/site-live%20demo-00e5ff)](https://rudra496.github.io/hyper-reason)
-[![Python 3.9+](https://img.shields.io/badge/python-3.9%20|%203.10%20|%203.11%20|%203.12-blue)](#)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10%20|%203.11%20|%203.12-blue)](#)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-**[🌐 Live in-browser demo](https://rudra496.github.io/hyper-reason)** · **[📊 Real eval (raw JSONL)](eval/runs/)** · **[🧾 Honest eval config](eval/CONFIG.md)**
+**[🌐 Live Web Demo](https://rudra496.github.io/hyper-reason)** · **[📊 Real Eval Traces (Raw JSONL)](eval/runs/)** · **[🧾 Honest Eval Contract](eval/CONFIG.md)**
 
 </div>
 
-> **v2 is a full honest rebuild.** v1.x shipped an engine that **never called a model** and a
-> benchmark table that was invented. v2 actually drives a real LLM, and publishes the eval
-> below — including the run where AE-MCTS **underperformed greedy**. No fabrication, no silent
-> fake fallbacks, every number traceable to a command.
+> **v2.0.1 is a full honest rebuild.** v1.x shipped an engine that never called a model and an invented benchmark table. v2 genuinely drives real LLMs (Z.AI GLM, OpenAI, DeepSeek, Groq, Ollama, Transformers), and publishes transparent evaluations — including runs where MCTS underperformed greedy. No fake fallbacks, every number traceable to code.
 
 ---
 
-## Why this exists
+## 🌟 Supported Model Providers
 
-Scaling test-time compute (o1/o3, DeepSeek-R1, rStar) works — but most public "MCTS for LLMs"
-repos are demo theater: the wrapper never calls the model, the KV numbers are hardcoded, the
-benchmark table is a wish. **HyperReason v2 is the boring, honest version**: a real
-Adaptive-Entropy MCTS that genuinely samples a model, searches, votes by self-consistency, and
-projects KV-cache savings from real token counts — with an eval you can re-run line by line.
+HyperReason supports **any** LLM provider or local runner out of the box:
 
-## 1-line quickstart
+| Provider | Class | Supported Models / Endpoints |
+|---|---|---|
+| **Z.AI / GLM** | `GLMBackend` | `glm-4.6`, `glm-4-flash`, `glm-4-plus` (Anthropic API Compatible) |
+| **OpenAI / DeepSeek / Groq** | `OpenAIBackend` | `gpt-4o`, `gpt-4o-mini`, `deepseek-reasoner`, Groq, vLLM, LM Studio |
+| **Ollama (Local)** | `OllamaBackend` | `llama3:8b`, `deepseek-r1:8b`, `qwen2.5:7b`, `mistral` |
+| **HuggingFace (Local)** | `TransformersBackend` | PyTorch / HuggingFace AutoModel causal models |
+| **Mock Engine (Offline)** | `MockBackend` | Deterministic heuristic sampler for instant testing without API keys |
+
+---
+
+## ⚡ Quickstart
+
+### 1. Installation
 
 ```bash
 pip install hypermcts
-export ANTHROPIC_BASE_URL=https://api.z.ai/api/anthropic   # any Anthropic-compatible gateway
-export ANTHROPIC_API_KEY=...
 ```
-> PyPI distribution name is **`hypermcts`** → imports as **`hyper_reason`**. (The name
-> `hyper-reason` is taken by an unrelated project, hence the distinct dist name.)
-```python
-from hyper_reason import wrap_model, GLMBackend
 
-model = wrap_model(GLMBackend(model="glm-4.6"))   # or OllamaBackend / TransformersBackend / None (Mock)
+> **Note on Naming:** PyPI package name is **`hypermcts`** -> imports in Python as **`hyper_reason`**.
+
+---
+
+### 2. Python API Usage
+
+```python
+import os
+from hyper_reason import wrap_model, GLMBackend, OpenAIBackend, OllamaBackend, MockBackend
+
+# Option A: Z.AI / GLM Backend
+os.environ["ANTHROPIC_BASE_URL"] = "https://api.z.ai/api/anthropic"
+os.environ["ANTHROPIC_API_KEY"] = "your_key_here"
+model = wrap_model(GLMBackend(model="glm-4.6"))
+
+# Option B: OpenAI / DeepSeek / Groq Backend
+# model = wrap_model(OpenAIBackend(model="gpt-4o-mini", api_key="sk-..."))
+
+# Option C: Offline / Mock Backend (No API Key Required)
+# model = wrap_model(MockBackend())
+
+# Execute AE-MCTS Search
 res = model.reason("Janet has 3 boxes of 12 apples, gives away 5 and eats 2. How many remain?")
 
-print(res["boxed_answer"])          # the self-consistency answer
-print(res["confidence"])            # agreement fraction over terminal trajectories
-print(res["metrics"]["flashkv"])    # projected KV-cache savings (labeled: simulator, no real GPU)
+print("Boxed Answer:", res["boxed_answer"])       # Consensus answer: \boxed{29}
+print("Confidence  :", res["confidence"])         # Agreement fraction across terminal trajectories
+print("Simulations:", res["metrics"]["simulations_executed"])
+print("KV Savings  :", res["metrics"]["flashkv"]) # Projected KV-cache memory accounting
 ```
+
+---
+
+### 3. Command Line Interface (CLI)
 
 ```bash
-# CLI
-hyper-reason --problem "If a train travels 60mph for 3.5h, how far?" --backend glm
+# Run with Z.AI GLM backend
+hyper-reason --problem "If a train travels 60mph for 3.5h, how far?" --backend glm --model glm-4.6
+
+# Run with OpenAI / DeepSeek
+hyper-reason --problem "Solve 17 * 24" --backend openai --model gpt-4o-mini --api-key "sk-..."
+
+# Run with Local Ollama
+hyper-reason --problem "Explain quantum superposition" --backend ollama --model llama3:8b
+
+# Run offline mock test
+hyper-reason --problem "What is 10 + 15?" --backend mock
 ```
 
-## Real benchmark — GSM8K-mini (N=20, GLM-4.6)
+---
 
-| method | accuracy | unparsable | mean tokens | mean latency |
+### 4. Interactive Web Server & Multi-Provider Playground
+
+HyperReason ships with a built-in, dark glassmorphism Web Playground:
+
+```bash
+# Start local playground server
+python examples/web_server.py
+```
+Open **[http://127.0.0.1:8088](http://127.0.0.1:8088)** in your browser to:
+- Switch between providers (Z.AI, OpenAI, Ollama, Transformers, Mock) in real-time.
+- Configure search budget sliders (Simulations, Search Depth, K-Candidates per step).
+- Inspect the interactive ASCII Reasoning Tree & execution metrics.
+
+---
+
+## 📊 Real Benchmark — GSM8K-mini (N=20, GLM-4.6)
+
+| Method | Accuracy | Unparsable | Mean Tokens | Mean Latency |
 |---|---:|---:|---:|---:|
-| **greedy (T=0, 1 sample)** | **95.0%** (19/20) | 0% | 185 | 3.5s |
-| self-consistency (K=4) | 90.0% (18/20) | 0% | 750 | 11.7s |
-| AE-MCTS (sims=6, k=2, d≤3) | 85.0% (17/20) | 0% | 669 | 14.2s |
+| **Greedy (T=0, 1 sample)** | **95.0%** (19/20) | 0% | 185 | 3.5s |
+| Self-Consistency (K=4) | 90.0% (18/20) | 0% | 750 | 11.7s |
+| **AE-MCTS (sims=6, k=2, d≤3)** | 85.0% (17/20) | 0% | 669 | 14.2s |
 
-**The honest reading:** GLM-4.6 is already near the ceiling on easy GSM8K, so a *modest-budget*
-search underperforms greedy here. Test-time search pays off on **harder problems / weaker base
-models / bigger budgets** — not on a strong model at its ease. We publish the loss, not a fake
-win. **Not a claim of SOTA.** Re-run / scale it: `python eval/gsm8k_mini.py --n 100 --sims 16 --k 4`. Full disclosure in
-[`eval/CONFIG.md`](eval/CONFIG.md); raw per-problem traces in [`eval/runs/`](eval/runs/).
+**Honest Reading:** Strong frontier models (like GLM-4.6) are already near the accuracy ceiling on easy GSM8K problems, so a modest-budget search underperforms greedy here. Test-time search pays off on **harder problems, weaker base models, or larger search budgets**. We publish the raw JSONL traces, not a fake win. **Not a claim of SOTA.**
 
-## What's real vs. labeled
+---
 
-| Component | Status |
-|---|---|
-| Model calls (GLM / Ollama / Transformers) | **Real** — backend actually sampled; `pip`-installed + live-tested on GLM |
-| AE-MCTS search (sample → diversity entropy → AE-PUCT → self-consistency) | **Real** — bounded budget, model-generated candidates |
-| Entropy | **Labeled**: `sample_diversity_entropy` — a logprob-free proxy (the gateway returns no logprobs) |
-| KV-cache savings | **Labeled**: projected simulator from real per-node token counts (no real GPU) |
-| Backends when offline | **Raise** — never fabricate a response (v1.x silently faked one) |
-
-See the **[honesty contract](https://rudra496.github.io/hyper-reason#honesty)** and the JS↔Python parity test that pins the browser demo to the package.
-
-## Architecture
+## 🏗 Architecture & Modules
 
 ```
 hyper_reason/
-  backends/      base(GLM/Ollama/Transformers/Mock) — the ONLY place a model is called
-  engine/        mcts (AE-MCTS), entropy, verifier (self-consistency), flashkv (projected), math_utils
-  orchestrator/  LangGraph proposer→verifier→refiner w/ checkpointer + human-in-the-loop interrupt
-  wrapper.py     wrap_model() — the 1-line API
-eval/            gsm8k_mini.py (real GSM8K) + aggregate.py + CONFIG.md (pre-registered) + runs/*.jsonl
-docs/            single-file interactive site (pure-JS engine port, no third-party CDNs)
+├── backends/        GLMBackend, OpenAIBackend, OllamaBackend, TransformersBackend, MockBackend
+├── engine/          mcts (AE-MCTS), entropy, verifier (self-consistency), flashkv (projected)
+├── orchestrator/    LangGraph proposer → verifier → refiner workflow with human-in-the-loop
+├── wrapper.py       wrap_model() — 1-line model wrapper API
+├── cli.py           CLI entrypoint (`hyper-reason`)
+eval/                gsm8k_mini.py (reproducible eval) + aggregate.py + CONFIG.md
+examples/            web_server.py (glassmorphism GUI) + demo_reasoning.py + benchmark_gsm8k.py
+docs/                interactive browser site (pure JS engine port)
 ```
 
-## For contributors
+---
 
-```bash
-pip install -e ".[dev,orchestrator]"
-pytest -q                          # 45 tests, incl. a live GLM end-to-end run
-python eval/gsm8k_mini.py --n 20   # reproduce the headline numbers
-```
+## 👨‍💻 About the Author & Connect
 
-Read [`eval/CONFIG.md`](eval/CONFIG.md) (pre-registered) and [`eval/EVAL_CHANGELOG.md`](eval/EVAL_CHANGELOG.md).
-The honesty contract is binding: a fix isn't "done" until the eval re-runs and the raw JSONL reflects it.
+Developed with ❤️ by **Rudra Sarker** — Software Engineer & Industrial Engineering researcher.
 
-## Citation
+- **🌐 Portfolio & Website:** [rudra496.github.io/site](https://rudra496.github.io/site)
+- **🐙 GitHub:** [@rudra496](https://github.com/rudra496)
+- **💼 LinkedIn:** [linkedin.com/in/rudrasarker](https://linkedin.com/in/rudrasarker)
+- **🐦 X / Twitter:** [@Rudra496](https://x.com/Rudra496)
+- **🚀 DevPost:** [devpost.com/rudrasarker](https://devpost.com/rudrasarker)
+- **🔬 ResearchGate:** [Rudra-Sarker-3](https://www.researchgate.net/profile/Rudra-Sarker-3)
+- **🆔 ORCID:** [0009-0001-4545-0932](https://orcid.org/0009-0001-4545-0932)
+- **📘 Facebook:** [facebook.com/rudrasarker130](https://facebook.com/rudrasarker130)
+
+---
+
+## 📜 Citation
 
 ```bibtex
 @software{sarker2026hyperreason,
   author = {Rudra Sarker},
-  title  = {HyperReason v2: an honest Adaptive-Entropy MCTS test-time-compute engine},
+  title  = {HyperReason: an honest Adaptive-Entropy MCTS test-time-compute engine for LLMs},
   url    = {https://github.com/rudra496/hyper-reason},
   year   = {2026}
 }
 ```
 
-MIT licensed · built by [Rudra Sarker](https://github.com/rudra496) ·
-[portfolio](https://rudra496.github.io/site)
-
-> ⭐ If a test-time-search repo that *publishes its losses* is more useful than one that fakes
-> its wins, star it and follow [@rudra496](https://github.com/rudra496).
+MIT Licensed · Built by [Rudra Sarker](https://github.com/rudra496).
