@@ -40,6 +40,10 @@ ENV/
 .DS_Store
 Thumbs.db
 
+# Environment variables
+.env
+.env.*
+
 # eval: regenerable cache + transient log (real run JSONL/summaries ARE committed)
 eval/.gsm8k_test.jsonl
 eval/runs/live_eval.log
