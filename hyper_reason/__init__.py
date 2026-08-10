@@ -26,6 +26,7 @@ from .engine import (
     self_consistency,
 )
 from .engine.mcts import ReasonEngine, TreeNode
+from .engine.flashkv import FlashKVSimulator
 from .wrapper import wrap_model, WrappedReasoningModel
 from .exporters import TreeTraceExporter
 from .terminal_visualizer import TreeVisualizer
@@ -49,5 +50,5 @@ __all__ = [
     "wrap_model", "WrappedReasoningModel",
     # utilities
     "TreeTraceExporter", "TreeVisualizer", "SearchPresets",
-    "ReasoningMemoryStore", "CostEfficiencyAnalyzer",
+    "ReasoningMemoryStore", "CostEfficiencyAnalyzer", "FlashKVSimulator",
 ]

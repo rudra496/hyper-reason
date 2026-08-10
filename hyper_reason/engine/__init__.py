@@ -17,6 +17,7 @@ from .math_utils import (
 from .entropy import sample_diversity_entropy, priors_from_diversity, bucket_distribution
 from .verifier import self_consistency, LLMJudge
 from .mcts import ReasonEngine, TreeNode
+from .flashkv import FlashKVSimulator
 
 __all__ = [
     "SearchConfig",
@@ -33,4 +34,5 @@ __all__ = [
     "bucket_distribution",
     "self_consistency",
     "LLMJudge",
+    "FlashKVSimulator",
 ]
