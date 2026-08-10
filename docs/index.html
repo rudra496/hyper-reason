@@ -173,11 +173,18 @@
     <div class="card">
       <table id="benchTable">
         <thead><tr><th>method</th><th class="num">accuracy</th><th class="num">unparsable</th><th class="num">mean tokens</th><th class="num">mean latency</th></tr></thead>
-        <tbody id="benchBody"><tr><td colspan="5" class="skel">loading real results… (see eval/CONFIG.md)</td></tr></tbody>
+        <tbody id="benchBody">
+          <tr><td>greedy (T=0, 1 sample)</td><td class="num ok">95.0% (19/20)</td><td class="num">0%</td><td class="num">185</td><td class="num">3.5s</td></tr>
+          <tr><td>self-consistency (K=4)</td><td class="num">90.0% (18/20)</td><td class="num">0%</td><td class="num">750</td><td class="num">11.7s</td></tr>
+          <tr><td>AE-MCTS (sims=6,k=2,d≤3)</td><td class="num">85.0% (17/20)</td><td class="num">0%</td><td class="num">669</td><td class="num">14.2s</td></tr>
+        </tbody>
       </table>
-      <p class="note" id="benchNote" style="margin-top:12px">Disclosure: proposer GLM-4.6 via Z.AI gateway · greedy T=0/1 sample · SC T=0.7/K=4 no-tree ·
-        AE-MCTS k=2, depth≤3, sims≤6 · entropy = sample-diversity proxy (no logprobs) · VRAM = projected simulator (no real GPU).
-        <b>Not a claim of SOTA.</b></p>
+      <p class="note" id="benchNote" style="margin-top:12px"><b>The honest reading:</b> on GSM8K-mini (N=20) with GLM-4.6, greedy already scores 95% —
+        a strong base model near the ceiling. Our <i>modest-budget</i> AE-MCTS (sims=6, k=2, depth≤3) scores 85%: test-time search
+        does <b>not</b> pay off where the model is already this good on easy problems. This is the opposite of a SOTA claim — it is the
+        honest baseline. The engine is built for harder problems / weaker models / bigger budgets; run your own with
+        <code>python eval/gsm8k_mini.py --n 100 --sims 16 --k 4</code>. Raw per-problem traces:
+        <a href="https://github.com/rudra496/hyper-reason/blob/main/eval/runs/20260810-210422.jsonl">eval/runs/*.jsonl</a>.</p>
     </div>
   </div>
 </section>

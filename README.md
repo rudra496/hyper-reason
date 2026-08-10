@@ -1,126 +1,118 @@
-```
-  ██╗  ██╗██╗██╗██████╗ ███████╗██████╗ ██████╗ ███████╗██╗███████╗██████╗ ██╗  ██╗
-  ██║  ██║╚██╗██╔══██╗██╔════╝██╔══██╗██╔══██╗██╔════╝██║██╔════╝██╔══██╗██║  ██║
-  ███████║ ╚███╔╝██████╔╝█████╗  ██████╔╝██████╔╝█████╗  ██║███████╗██║  ██║███████║
-  ██╔══██║  ██╔╝ ██╔═══╝ ██╔══╝  ██╔══██╗██╔══██╗██╔══╝  ██║╚════██║██║  ██║██╔══██║
-  ██║  ██║  ██║  ██║     ███████╗██║  ██║██║  ██║███████╗██║███████║██████╔╝██║  ██║
-  ╚═╝  ╚═╝  ╚═╝  ╚═╝     ╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚═╝╚══════╝╚═════╝ ╚═╝  ╚═╝
-```
-
 <div align="center">
 
 # ⚡ HyperReason
 
-### **Autonomous Test-Time Compute Scaling & Dynamic KV-Cache Sparsification for Edge & Local LLMs**
+### A test-time-compute (AE-MCTS) engine that **actually runs** — and reports when it loses.
 
-[![Build & Test CI](https://github.com/rudra496/hyper-reason/actions/workflows/ci.yml/badge.svg)](https://github.com/rudra496/hyper-reason/actions/workflows/ci.yml)
-[![GitHub Pages](https://img.shields.io/badge/site-live%20demo-00f2fe)](https://rudra496.github.io/hyper-reason)
-[![Python 3.9+](https://img.shields.io/badge/python-3.9%20%7C%203.10%20%7C%203.11%20%7C%203.12-blue)](https://pypi.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Stars](https://img.shields.io/github/stars/rudra496/hyper-reason?style=social)](https://github.com/rudra496/hyper-reason)
+[![tests](https://github.com/rudra496/hyper-reason/actions/workflows/ci.yml/badge.svg)](https://github.com/rudra496/hyper-reason/actions/workflows/ci.yml)
+[![Live demo](https://img.shields.io/badge/site-live%20demo-00e5ff)](https://rudra496.github.io/hyper-reason)
+[![Python 3.9+](https://img.shields.io/badge/python-3.9%20|%203.10%20|%203.11%20|%203.12-blue)](#)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-[**🌐 Live Demo Site**](https://rudra496.github.io/hyper-reason) • [**📑 Paper Blueprint**](file:///storage/emulated/0/agy/hyper_reason/PROJECT_BLUEPRINT.txt) • [**🚀 7-Day Growth Playbook**](file:///storage/emulated/0/agy/hyper_reason/VIRAL_LAUNCH_STRATEGY.txt)
-
----
+**[🌐 Live in-browser demo](https://rudra496.github.io/hyper-reason)** · **[📊 Real eval (raw JSONL)](eval/runs/)** · **[🧾 Honest eval config](eval/CONFIG.md)**
 
 </div>
 
-## 💡 What is HyperReason?
-
-**HyperReason** is an open-source inference engine designed to scale test-time reasoning compute (similar to OpenAI o1/o3 and DeepSeek-R1 rollouts) on consumer GPUs without running out of memory (OOM).
-
-Standard Monte Carlo Tree Search (MCTS) duplicates Key-Value (KV) cache tensors for every rollout branch, consuming 40GB+ VRAM. **HyperReason** solves this with two core technical innovations:
-
-1. ⚡ **FlashKV Zero-Copy Paged Cache**: Tree-structured Copy-on-Write block sharing. Child branches share parent KV memory blocks without copying underlying tensors (**85% VRAM Reduction**).
-2. 🌳 **Adaptive Entropy MCTS (AE-MCTS)**: Dynamically weights PUCT search exploration constants based on real-time token Shannon entropy distributions.
-3. 🚀 **Speculative Parallel Rollouts**: Parallel draft candidate generation verified in a single batched pass (**4.5x Speedup**).
-4. 🎁 **Universal 1-Line Wrapper API**: Wrap any PyTorch model, HuggingFace model, vLLM instance, or Ollama client with `model = wrap_model(base_model)`.
+> **v2 is a full honest rebuild.** v1.x shipped an engine that **never called a model** and a
+> benchmark table that was invented. v2 actually drives a real LLM, and publishes the eval
+> below — including the run where AE-MCTS **underperformed greedy**. No fabrication, no silent
+> fake fallbacks, every number traceable to a command.
 
 ---
 
-## ⚡ 1-Minute Quickstart
+## Why this exists
 
-### Installation
+Scaling test-time compute (o1/o3, DeepSeek-R1, rStar) works — but most public "MCTS for LLMs"
+repos are demo theater: the wrapper never calls the model, the KV numbers are hardcoded, the
+benchmark table is a wish. **HyperReason v2 is the boring, honest version**: a real
+Adaptive-Entropy MCTS that genuinely samples a model, searches, votes by self-consistency, and
+projects KV-cache savings from real token counts — with an eval you can re-run line by line.
+
+## 1-line quickstart
+
 ```bash
-pip install hyper-reason
+pip install -e .            # or: pip install hyper-reason
+export ANTHROPIC_BASE_URL=https://api.z.ai/api/anthropic   # any Anthropic-compatible gateway
+export ANTHROPIC_API_KEY=...
 ```
-
-### 1-Line Universal Model Wrapping
 ```python
-from hyper_reason import wrap_model, SearchPresets
+from hyper_reason import wrap_model, GLMBackend
 
-# Wrap any HuggingFace or PyTorch model
-model = wrap_model(base_model, config=SearchPresets.high_accuracy())
+model = wrap_model(GLMBackend(model="glm-4.6"))   # or OllamaBackend / TransformersBackend / None (Mock)
+res = model.reason("Janet has 3 boxes of 12 apples, gives away 5 and eats 2. How many remain?")
 
-# Execute test-time reasoning search
-result = model.reason("If Janet has 3 boxes of 12 apples, gives away 5 and eats 2, how many left?")
-
-print("Boxed Solution:", result["boxed_answer"])
-# Output: \boxed{29}
-
-print("FlashKV VRAM Saved:", result["metrics"]["flash_kv_stats"]["saved_vram_mb"], "MB")
+print(res["boxed_answer"])          # the self-consistency answer
+print(res["confidence"])            # agreement fraction over terminal trajectories
+print(res["metrics"]["flashkv"])    # projected KV-cache savings (labeled: simulator, no real GPU)
 ```
 
-### CLI Execution
 ```bash
-hyper-reason --prompt "Solve: If a train travels at 60 mph for 3.5 hours, how far does it travel?" --simulations 32 --visualize
+# CLI
+hyper-reason --problem "If a train travels 60mph for 3.5h, how far?" --backend glm
 ```
 
----
+## Real benchmark — GSM8K-mini (N=20, GLM-4.6)
 
-## 📊 Benchmark Metrics
+| method | accuracy | unparsable | mean tokens | mean latency |
+|---|---:|---:|---:|---:|
+| **greedy (T=0, 1 sample)** | **95.0%** (19/20) | 0% | 185 | 3.5s |
+| self-consistency (K=4) | 90.0% (18/20) | 0% | 750 | 11.7s |
+| AE-MCTS (sims=6, k=2, d≤3) | 85.0% (17/20) | 0% | 669 | 14.2s |
 
-| Framework / Model | GSM8K (Acc) | MATH (Acc) | VRAM Peak (GB) | Search Throughput |
-|---|:---:|:---:|:---:|:---:|
-| Llama-3-8B-Instruct (Base) | 74.2% | 28.4% | 14.2 GB | 1.00x |
-| Llama-3-8B + Standard MCTS | 86.5% | 39.1% | 38.6 GB | 4.20x (Slow) |
-| **Llama-3-8B + HYPERREASON** | **93.8%** | **47.6%** | **13.5 GB** | **1.15x (Fast) ⚡** |
-| DeepSeek-R1-Distill-Qwen-7B | 88.1% | 49.2% | 12.8 GB | 1.00x |
-| **DeepSeek-R1 + HYPERREASON** | **96.4%** | **61.5%** | **11.2 GB** | **1.10x (SOTA) 🚀** |
+**The honest reading:** GLM-4.6 is already near the ceiling on easy GSM8K, so a *modest-budget*
+search underperforms greedy here. Test-time search pays off on **harder problems / weaker base
+models / bigger budgets** — not on a strong model at its ease. We publish the loss, not a fake
+win. Re-run / scale it: `python eval/gsm8k_mini.py --n 100 --sims 16 --k 4`. Full disclosure in
+[`eval/CONFIG.md`](eval/CONFIG.md); raw per-problem traces in [`eval/runs/`](eval/runs/).
 
----
+## What's real vs. labeled
 
-## 🖥️ Interactive ASCII Tree Search Visualizer
+| Component | Status |
+|---|---|
+| Model calls (GLM / Ollama / Transformers) | **Real** — backend actually sampled; `pip`-installed + live-tested on GLM |
+| AE-MCTS search (sample → diversity entropy → AE-PUCT → self-consistency) | **Real** — bounded budget, model-generated candidates |
+| Entropy | **Labeled**: `sample_diversity_entropy` — a logprob-free proxy (the gateway returns no logprobs) |
+| KV-cache savings | **Labeled**: projected simulator from real per-node token counts (no real GPU) |
+| Backends when offline | **Raise** — never fabricate a response (v1.x silently faked one) |
 
-```text
-⚡ HyperReason Engine — Monte Carlo Tree Search Visualization ⚡
-=================================================================
-ROOT: Question: Janet has 3 boxes of apples...
-    ├── [Depth 1] N=24 | Q=0.850 | H=0.35 -> "Step 1: Calculate primary component = 3 * 12 = 36."
-    │   ├── [Depth 2] N=18 | Q=0.890 | H=0.25 -> "Step 2: Calculate total reductions = 5 + 2 = 7."
-    │   │   └── [Depth 3] N=16 | Q=0.960 | H=0.15 -> "Step 3: Calculate final remainder = 36 - 7 = \boxed{29}."
-    │   └── [Depth 2] N=6  | Q=0.720 | H=0.60 -> "Step 2: Re-checking intermediate multiplication..."
-    └── [Depth 1] N=2  | Q=0.410 | H=0.82 -> "Step 1: Parse alternate distribution constraints..."
-=================================================================
+See the **[honesty contract](https://rudra496.github.io/hyper-reason#honesty)** and the JS↔Python parity test that pins the browser demo to the package.
+
+## Architecture
+
+```
+hyper_reason/
+  backends/      base(GLM/Ollama/Transformers/Mock) — the ONLY place a model is called
+  engine/        mcts (AE-MCTS), entropy, verifier (self-consistency), flashkv (projected), math_utils
+  orchestrator/  LangGraph proposer→verifier→refiner w/ checkpointer + human-in-the-loop interrupt
+  wrapper.py     wrap_model() — the 1-line API
+eval/            gsm8k_mini.py (real GSM8K) + aggregate.py + CONFIG.md (pre-registered) + runs/*.jsonl
+docs/            single-file interactive site (pure-JS engine port, no third-party CDNs)
 ```
 
----
+## For contributors
 
-## 🛠️ Key Features Matrix
+```bash
+pip install -e ".[dev,orchestrator]"
+pytest -q                          # 45 tests, incl. a live GLM end-to-end run
+python eval/gsm8k_mini.py --n 20   # reproduce the headline numbers
+```
 
-- 🌳 **Adaptive Entropy MCTS**: Entropy-guided PUCT exploration (`mcts_engine.py`)
-- ⚡ **FlashKV Zero-Copy Cache**: Paged block pointer tree manager (`flash_kv.py`)
-- 🚀 **Speculative Tree Engine**: Batched parallel candidate verifications (`speculative.py`)
-- 💎 **INT8/INT4 Precision Quantization**: KV tensor scale quantizers (`model_quantizer.py`)
-- 🤖 **Multi-Agent Tree Search**: Proposer, Verifier, and Refiner persona engine (`multi_agent_tree.py`)
-- 📊 **3D WebGL Canvas Visualizer**: Physics-based graph particle visualization (`tree_visualizer_3d.py`)
-- 🧠 **Reasoning Memory Store**: Vector-free pattern recall memory (`agent_memory.py`)
-- 🌐 **Interactive Local Web Server**: GUI playground on `http://localhost:8080` (`examples/web_server.py`)
-- 📄 **Trace Exporters**: JSON & Markdown solution tree exporters (`exporters.py`)
+Read [`eval/CONFIG.md`](eval/CONFIG.md) (pre-registered) and [`eval/EVAL_CHANGELOG.md`](eval/EVAL_CHANGELOG.md).
+The honesty contract is binding: a fix isn't "done" until the eval re-runs and the raw JSONL reflects it.
 
----
-
-## 📜 Citation & License
+## Citation
 
 ```bibtex
 @software{sarker2026hyperreason,
   author = {Rudra Sarker},
-  title = {HyperReason: Adaptive Entropy-Guided MCTS and Dynamic KV-Cache Sparsification for Local Reasoning Scaling},
-  url = {https://github.com/rudra496/hyper-reason},
-  year = {2026}
+  title  = {HyperReason v2: an honest Adaptive-Entropy MCTS test-time-compute engine},
+  url    = {https://github.com/rudra496/hyper-reason},
+  year   = {2026}
 }
 ```
 
-Licensed under the [MIT License](LICENSE).  
-**Author**: Rudra Sarker  
-**Portfolio**: [https://rudra496.github.io/site](https://rudra496.github.io/site)
+MIT licensed · built by [Rudra Sarker](https://github.com/rudra496) ·
+[portfolio](https://rudra496.github.io/site)
+
+> ⭐ If a test-time-search repo that *publishes its losses* is more useful than one that fakes
+> its wins, star it and follow [@rudra496](https://github.com/rudra496).
