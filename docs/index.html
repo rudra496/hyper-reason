@@ -212,7 +212,7 @@
     <div class="grid">
       <div class="card"><h3>Real or labeled</h3><p>Every number is either produced by a runnable command whose config is given, or explicitly tagged <b>projected / simulated</b> with the assumption stated.</p></div>
       <div class="card"><h3>No fake fallbacks</h3><p>Missing model/daemon → the backend <b>raises</b>, never returns invented text or token counts. (v1.x silently faked an Ollama response when offline.)</p></div>
-      <div class="card"><h3>Entropy, stated</h3><p>“sample-diversity entropy (no logprobs)” — not “token entropy”. The gateway returns no logprobs, so we don’t pretend otherwise.</p></div>
+      <div class="card"><h3>Entropy, stated</h3><p>A sample-based uncertainty proxy labeled <b>sample-diversity entropy (no logprobs)</b>. The gateway returns no per-token distribution, so we don’t pretend we have one.</p></div>
       <div class="card"><h3>Verifiable</h3><p>Raw per-problem JSONL + aggregator are in <code>eval/</code>; a JS↔Python parity test pins the browser port to the package.</p></div>
     </div>
   </div>
@@ -226,44 +226,11 @@
   </div>
 </footer>
 
+<script src="engine.js"></script>
 <script>
-/* ============================================================================
-   HyperReason engine — JS port (parity-tested against the Python package).
-   Pure arithmetic; the only "model" here is a deterministic, labeled sampler.
-   ========================================================================== */
-
-// ---- shared math (mirrors hyper_reason/engine/math_utils.py) ----
-function shannonFromCounts(counts){
-  const total = counts.reduce((a,b)=>a+b,0);
-  if(total<=0) return 0;
-  let h=0; for(const c of counts){ if(c>0){ const p=c/total; h-=p*Math.log2(p); } } return h;
-}
-function normalizeStep(text){
-  return text.replace(/\\boxed\{[^}]*\}/g,'\\boxed{}').toLowerCase().replace(/\s+/g,' ').trim();
-}
-function sampleDiversityEntropy(texts){
-  if(!texts.length) return 0;
-  const b={}; for(const t of texts){ const k=normalizeStep(t); b[k]=(b[k]||0)+1; }
-  return shannonFromCounts(Object.values(b));
-}
-function priorsFromDiversity(texts){
-  if(!texts.length) return [];
-  const n=texts.map(normalizeStep); const c={}; for(const x of n)c[x]=(c[x]||0)+1;
-  return n.map(x=>c[x]/n.length);
-}
-function extractFinalAnswer(text){
-  const m=text.match(/\\boxed\{([^{}]*)\}/g);
-  if(m){ const last=m[m.length-1].replace(/\\boxed\{|\}/g,'').trim(); if(last) return last; }
-  const nums=text.match(/-?\d+(?:\.\d+)?/g); if(nums&&nums.length) return nums[nums.length-1];
-  return "__unparsable__";
-}
-function selfConsistency(traces){
-  if(!traces.length) return ["__unparsable__",0,{}];
-  const ans=traces.map(extractFinalAnswer); const c={};
-  for(const a of ans)c[a]=(c[a]||0)+1;
-  const best=Object.keys(c).reduce((a,b)=>c[a]>=c[b]?a:b);
-  return [best, c[best]/ans.length, c];
-}
+/* Pure engine functions (shannonFromCounts, normalizeStep, sampleDiversityEntropy,
+   priorsFromDiversity, extractFinalAnswer, selfConsistency) live in engine.js and are
+   parity-tested against the Python package by tests/test_js_parity.py. */
 
 // ---- deterministic in-browser sampler (clearly labeled, NOT a model) ----
 const STEP_BANK=[

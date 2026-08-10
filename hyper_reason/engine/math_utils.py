@@ -84,7 +84,7 @@ def normalize_step(text: str) -> str:
     Two semantically-identical steps that differ only by answer formatting/case then bucket
     together — which is what we want for a diversity signal.
     """
-    t = _BOXED_RE.sub("\\boxed{}", text)
+    t = _BOXED_RE.sub("[boxed]", text)
     t = t.lower()
     t = re.sub(r"\s+", " ", t).strip()
     return t
