@@ -205,7 +205,7 @@ footer{border-top:1px solid var(--line);padding:40px 0;color:var(--mut-2);font-s
       with a genuinely interactive demo, a reproducible GSM8K eval, and KV-cache accounting that's labeled
       <i>projected</i> when it can't be measured.</p>
     <div class="cta-row">
-      <div class="install"><span class="pfx">$</span> pip install hyper-reason
+      <div class="install"><span class="pfx">$</span> pip install git+github.com/rudra496/hyper-reason
         <button id="copy" title="copy">copy</button></div>
       <a class="btn btn-primary" href="#demo">Run the engine ↓</a>
     </div>
@@ -524,7 +524,7 @@ function escapeHtml(s){return s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">
 
 /* ---- UI ---- */
 ["sims","k","depth"].forEach(i=>$(i).addEventListener("input",()=>{$("simsV").textContent=$("sims").value;$("kV").textContent=$("k").value;$("dV").textContent=$("depth").value;}));
-$("copy").onclick=()=>{navigator.clipboard.writeText("pip install hyper-reason");$("copy").textContent="copied";setTimeout(()=>$("copy").textContent="copy",1200);};
+$("copy").onclick=()=>{navigator.clipboard.writeText("pip install git+https://github.com/rudra496/hyper-reason");$("copy").textContent="copied";setTimeout(()=>$("copy").textContent="copy",1200);};
 
 async function run(){
   $("run").disabled=true;$("status").textContent="initializing…";
