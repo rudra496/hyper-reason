@@ -26,6 +26,7 @@ class GLMBackend:
         api_key: str | None = None,
         timeout: float = 60.0,
         system: str | None = None,
+        max_retries: int = 3,
     ):
         self.model = model
         self.base_url = (
@@ -34,6 +35,7 @@ class GLMBackend:
         self.api_key = api_key or os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("ZAI_API_KEY")
         self.timeout = timeout
         self.system = system
+        self.max_retries = max_retries
         if not self.api_key:
             raise RuntimeError(
                 "GLMBackend needs an API key. Set ANTHROPIC_API_KEY (or pass api_key=)."
@@ -73,14 +75,32 @@ class GLMBackend:
         out: list[Sample] = []
         for _ in range(k):
             t0 = time.time()
-            resp = requests.post(
-                url, headers=headers, json=self._body(prompt, temperature, max_tokens, stop),
-                timeout=self.timeout,
-            )
+            resp = None
+            # Retry ONLY transient gateway errors (timeouts, connection errors, 429, 5xx).
+            # A 4xx (bad model/auth) is raised immediately — retrying won't help and would
+            # mask a real misconfiguration.
+            for attempt in range(self.max_retries + 1):
+                try:
+                    resp = requests.post(
+                        url, headers=headers,
+                        json=self._body(prompt, temperature, max_tokens, stop),
+                        timeout=self.timeout,
+                    )
+                except requests.RequestException:
+                    if attempt >= self.max_retries:
+                        raise
+                    time.sleep(0.6 * (2 ** attempt))
+                    continue
+                if resp.status_code == 200 or resp.status_code < 500 and resp.status_code != 429:
+                    break
+                if attempt >= self.max_retries:
+                    break
+                time.sleep(0.6 * (2 ** attempt))
             latency_ms = (time.time() - t0) * 1000.0
-            if resp.status_code != 200:
+            if resp is None or resp.status_code != 200:
                 raise RuntimeError(
-                    f"GLMBackend {self.model} HTTP {resp.status_code}: {resp.text[:300]}"
+                    f"GLMBackend {self.model} HTTP {getattr(resp,'status_code','?')}: "
+                    f"{getattr(resp,'text','(no response)')[:300]}"
                 )
             data = resp.json()
             content = data.get("content") or []
