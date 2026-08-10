@@ -8,6 +8,7 @@ Author: Rudra Sarker (Rudra Sir) [https://github.com/rudra496]
 ----------------------------------------------------------------------------------------------------
 Version     | Supported
 ----------------------------------------------------------------------------------------------------
+2.x.x       | Yes (Active security patches & updates)
 1.0.x       | Yes (Active security patches & updates)
 < 1.0.0     | No
 
