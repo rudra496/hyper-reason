@@ -4,21 +4,50 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "hyper-reason"
-version = "1.0.0"
-authors = [
-  { name="Rudra Sarker", email="rudrasarker130@gmail.com" },
-]
-description = "Autonomous Test-Time Compute Scaling & Dynamic KV-Cache Sparsification for Edge & Local LLMs"
+version = "2.0.0"
+description = "Honest test-time compute (AE-MCTS) + projected KV-cache memory accounting for local/edge LLMs. Every metric is real or explicitly labeled simulated."
 readme = "README.txt"
-requires-python = ">=3.8"
+requires-python = ">=3.10"
+authors = [{ name = "Rudra Sarker", email = "rudrasarker130@gmail.com" }]
+license = { text = "MIT" }
+keywords = ["llm", "mcts", "test-time-compute", "reasoning", "kv-cache", "local-ai"]
 classifiers = [
-    "Programming Language :: Python :: 3",
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
     "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent",
-    "Topic :: Scientific/Engineering :: Artificial Intelligence"
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+# Core engine + default GLM backend stay dependency-light and portable.
+dependencies = [
+    "requests>=2.28",
+    "numpy>=1.24",
 ]
 
+[project.optional-dependencies]
+anthropic = ["anthropic>=0.40"]
+orchestrator = ["langgraph>=0.2", "pydantic>=2"]
+torch = ["torch>=2.0"]                       # real-tensor FlashKV path
+transformers = ["transformers>=4.40", "torch>=2.0"]
+ollama = ["ollama>=0.3"]
+dev = ["pytest>=7", "pytest-cov"]
+all = ["anthropic>=0.40", "langgraph>=0.2", "pydantic>=2", "torch>=2.0", "transformers>=4.40", "pytest>=7"]
+
+[project.scripts]
+hyper-reason = "hyper_reason.cli:main"
+
 [project.urls]
-"Homepage" = "https://github.com/rudra496/hyper-reason"
+Homepage = "https://github.com/rudra496/hyper-reason"
 "Bug Tracker" = "https://github.com/rudra496/hyper-reason/issues"
-"Portfolio" = "https://rudra496.github.io/site"
+Portfolio = "https://rudra496.github.io/site"
+
+[tool.setuptools.packages.find]
+# Only ship the Python package. `eval/` (scripts) and `web/` (static site) are NOT packages.
+include = ["hyper_reason*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

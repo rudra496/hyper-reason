@@ -1,57 +1,61 @@
-"""
-HyperReason: Autonomous Test-Time Compute Scaling & Dynamic KV-Cache Sparsification
-Author: Rudra Sarker & Buggz
-License: MIT
+"""HyperReason — honest test-time compute (AE-MCTS) + projected KV-cache memory accounting.
+
+v2: every claim is backed by code that runs. The engine genuinely drives a model backend
+(GLM default / Ollama / Transformers / deterministic Mock). See README for the honesty notes.
 """
 
-from .mcts_engine import ReasonEngine, TreeNode, SearchConfig
-from .kv_compressor import DynamicKVCacheCompressor, KVCompressionConfig
-from .verifier import SelfConsistencyVerifier, StepValueEvaluator
-from .terminal_visualizer import TreeVisualizer
-from .pytorch_wrapper import PyTorchKVCacheHook
-from .ollama_adapter import OllamaModelAdapter
-from .vllm_adapter import VLLMPagedAttentionHook
-from .datasets import GSM8KDataset, BenchmarkEvaluator
-from .flash_kv import FlashKVTreeManager, KVBlock
-from .speculative import SpeculativeTreeEngine
+from .backends import (
+    Sample,
+    ModelBackend,
+    count_tokens,
+    MockBackend,
+    GLMBackend,
+    OllamaBackend,
+    TransformersBackend,
+)
+from .engine import (
+    SearchConfig,
+    shannon,
+    shannon_from_counts,
+    compute_salience,
+    extract_boxed,
+    extract_final_answer,
+    normalize_step,
+    sample_diversity_entropy,
+    priors_from_diversity,
+    self_consistency,
+)
+from .engine.mcts import ReasonEngine, TreeNode
+from .engine.flashkv import FlashKVSimulator
+
+# Optional: the LangGraph multi-agent orchestrator (needs the [orchestrator] extra).
+try:  # pragma: no cover
+    from .orchestrator import build_graph, run as run_orchestrator
+except Exception:  # langgraph not installed -> core stays importable
+    build_graph = None  # type: ignore[assignment]
+    run_orchestrator = None  # type: ignore[assignment]
 from .wrapper import wrap_model, WrappedReasoningModel
 from .exporters import TreeTraceExporter
+from .terminal_visualizer import TreeVisualizer
 from .config_presets import SearchPresets
-from .cost_analyzer import CostEfficiencyAnalyzer
-from .model_quantizer import KVQuantizer
-from .multi_agent_tree import MultiAgentReasonTree
-from .tree_visualizer_gui import HTMLTreeVisualizer
-from .tree_visualizer_3d import ThreeDTreeVisualizer
 from .agent_memory import ReasoningMemoryStore
+from .cost_analyzer import CostEfficiencyAnalyzer
 
-__version__ = "1.0.0"
+__version__ = "2.0.0"
 __author__ = "Rudra Sarker"
 
 __all__ = [
-    "ReasonEngine",
-    "TreeNode",
-    "SearchConfig",
-    "DynamicKVCacheCompressor",
-    "KVCompressionConfig",
-    "SelfConsistencyVerifier",
-    "StepValueEvaluator",
-    "TreeVisualizer",
-    "PyTorchKVCacheHook",
-    "OllamaModelAdapter",
-    "VLLMPagedAttentionHook",
-    "GSM8KDataset",
-    "BenchmarkEvaluator",
-    "FlashKVTreeManager",
-    "KVBlock",
-    "SpeculativeTreeEngine",
-    "wrap_model",
-    "WrappedReasoningModel",
-    "TreeTraceExporter",
-    "SearchPresets",
-    "CostEfficiencyAnalyzer",
-    "KVQuantizer",
-    "MultiAgentReasonTree",
-    "HTMLTreeVisualizer",
-    "ThreeDTreeVisualizer",
-    "ReasoningMemoryStore",
+    # backends
+    "Sample", "ModelBackend", "count_tokens",
+    "MockBackend", "GLMBackend", "OllamaBackend", "TransformersBackend",
+    # engine
+    "SearchConfig", "ReasonEngine", "TreeNode",
+    "shannon", "shannon_from_counts", "compute_salience",
+    "extract_boxed", "extract_final_answer", "normalize_step",
+    "sample_diversity_entropy", "priors_from_diversity", "self_consistency",
+    # high-level API
+    "wrap_model", "WrappedReasoningModel",
+    # utilities
+    "TreeTraceExporter", "TreeVisualizer", "SearchPresets",
+    "ReasoningMemoryStore", "CostEfficiencyAnalyzer", "FlashKVSimulator",
 ]

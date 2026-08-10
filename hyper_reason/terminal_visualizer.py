@@ -4,7 +4,7 @@ Renders dynamic MCTS reasoning rollout graphs directly in terminal CLI.
 """
 
 from typing import List, Optional
-from .mcts_engine import TreeNode
+from .engine.mcts import TreeNode
 
 
 class TreeVisualizer:

@@ -1,0 +1,36 @@
+{
+  "n": 20,
+  "backend": "glm:glm-4.6",
+  "methods": {
+    "greedy": {
+      "accuracy_pct": 95.0,
+      "correct": 19,
+      "n": 20,
+      "unparsable_pct": 0.0,
+      "mean_completion_tokens": 185.4,
+      "mean_prompt_tokens": 97.7,
+      "mean_latency_ms": 3534.5,
+      "mean_flashkv_saved_tokens": 0.0
+    },
+    "mcts": {
+      "accuracy_pct": 85.0,
+      "correct": 17,
+      "n": 20,
+      "unparsable_pct": 0.0,
+      "mean_completion_tokens": 668.5,
+      "mean_prompt_tokens": 455.3,
+      "mean_latency_ms": 14212.4,
+      "mean_flashkv_saved_tokens": 1150.5
+    },
+    "sc": {
+      "accuracy_pct": 90.0,
+      "correct": 18,
+      "n": 20,
+      "unparsable_pct": 0.0,
+      "mean_completion_tokens": 749.5,
+      "mean_prompt_tokens": 121.8,
+      "mean_latency_ms": 11721.0,
+      "mean_flashkv_saved_tokens": 0.0
+    }
+  }
+}

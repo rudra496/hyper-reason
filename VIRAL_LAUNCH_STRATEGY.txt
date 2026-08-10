@@ -1,104 +1,34 @@
-====================================================================================================
-           7-DAY VIRAL LAUNCH & GITHUB STAR HARDENING PLAYBOOK
-====================================================================================================
-Target Project: HyperReason (https://github.com/rudra496/hyper-reason)
-Goal: Gain 1,000+ to 10,000+ GitHub Stars & Thousands of Followers within 7 Days.
-Author: Rudra Sarker (Rudra Sir) [https://github.com/rudra496] & Buggz
+VIRAL_LAUNCH_STRATEGY.txt  —  REVISED for the honest v2 (2026-08-10)
+====================================================================
 
-----------------------------------------------------------------------------------------------------
-1. WHY REPOSITORIES GO VIRAL ON GITHUB (THE VIRAL ENGINE MECHANICS)
-----------------------------------------------------------------------------------------------------
-GitHub Trending algorithm rewards repos based on three core signals within a 24-48 hour window:
-1. Velocity of Stars: Rapid initial influx of stars (100+ stars in first 6 hours triggers GitHub Trending).
-2. Frictionless First Impression (The 5-Second Rule):
-   - Eye-popping ASCII/GIF visual demo at top of README.
-   - 1-line copy-paste quickstart command (`pip install hyper-reason`).
-   - Clear benchmark table showing 4x speedup / +20% accuracy gain over baseline models.
-3. Multi-Channel Synchronization: Simultaneous post launches across Reddit, Twitter/X, Hacker News, 
-   ProductHunt, Dev.to, and YouTube.
+The original version of this file pitched launching on fabricated v1.x claims
+("beats DeepSeek-R1", "96.4% GSM8K"). That is off the table — those numbers
+were invented. Launching hype on fake benchmarks gets a repo demolished on
+HN/r/LocalLLaMA within hours and destroys the author's credibility.
 
-----------------------------------------------------------------------------------------------------
-2. DAY-BY-DAY VIRAL EXECUTION ROADMAP
-----------------------------------------------------------------------------------------------------
+The v2 launch angle is the opposite and it is a stronger, rarer hook:
 
-DAY 0 (Pre-Launch & Repo Hardening):
-  [x] Create GitHub repository `rudra496/hyper-reason`.
-  [x] Upload clean production code (`hyper_reason/`), examples, unit tests, and README.md.
-  [x] Add open-source MIT License, topic tags: `llm`, `mcts`, `reasoning`, `test-time-compute`, `kv-cache`, `deepseek-r1`, `pytorch`, `local-ai`.
-  [x] Ensure GitHub social preview image (OG Image) is added (use generate_image or visual hero banner).
+  "HyperReason is the test-time-search repo that publishes the eval where it
+   LOST to greedy — real engine, real model calls, raw JSONL, no fake fallbacks."
 
-DAY 1 (The Big Bang — Reddit & Twitter/X Blast):
-  • Channel 1: Reddit (r/LocalLLaMA & r/MachineLearning)
-    - Post Title (r/LocalLLaMA): "We built HyperReason: Open-Source Test-Time MCTS Engine that slashes VRAM by 65% with Dynamic KV-Cache Pruning (Outperforms DeepSeek-R1 rollouts on local GPUs)"
-    - Body: Link to repo, bench tables, 1-line quickstart, invite feedback.
-  • Channel 2: Twitter / X Thread (Tag AI influencers @karpathy, @bindureddy, @swyx, @sama, @ggerganov)
-    - Tweet 1 (Hook): "OpenAI o1 & o3 scale reasoning via test-time compute. But doing MCTS locally consumes 40GB+ VRAM... until today. 🚀 Introducing HyperReason: Test-Time Compute Scaling + Dynamic KV Pruning for local LLMs!"
-    - Tweet 2: Include ASCII terminal tree search GIF/video clip.
-    - Tweet 3: Benchmark comparison graph vs standard MCTS.
-    - Tweet 4: Link to GitHub repo https://github.com/rudra496/hyper-reason.
+In an era of benchmark fraud, radical honesty + a genuinely-working in-browser
+demo is the differentiator. The credibility IS the virality.
 
-DAY 2 (Hacker News & Product Hunt):
-  • Hacker News Submission:
-    - Title: "Show HN: HyperReason – Adaptive MCTS and dynamic KV-cache pruning for LLMs"
-    - Timing: Post at 8:00 AM EST (1:00 PM UTC) on Tuesday/Wednesday for maximum US tech traffic.
-  • Product Hunt Launch:
-    - Title: "HyperReason — Scale LLM reasoning locally with 65% less VRAM"
+Launch checklist (honest):
+  [x] Engine actually drives a real model (GLM live-tested).
+  [x] Real GSM8K-mini eval with raw per-problem JSONL + aggregator (eval/).
+  [x] Pre-registered eval config (eval/CONFIG.md) + changelog.
+  [x] Interactive in-browser demo of the real engine (no key, no CDNs).
+  [x] JS<->Python parity test for the browser port.
+  [x] Honest README that states the loss, not a fake win.
+  [ ] Record a 15s screen-capture of the live demo tree animation.
+  [ ] Submit to r/LocalLLaMA as "Show: an honest test-time-search engine
+      (with the eval where MCTS lost to greedy)".
+  [ ] HN title: "Show HN: HyperReason — test-time MCTS that actually calls the
+      model (and reports when it underperforms greedy)".
+  [ ] Pin the repo; link the live demo at the top of the README.
 
-DAY 3 (Developer Blogs & Tech Media Outreach):
-  • Publish detailed technical article on DEV.to & Medium:
-    - Article Title: "How We Built an Open-Source Reasoner That Scales Test-Time Compute on Consumer GPUs"
-  • Link back to GitHub profile https://github.com/rudra496 and portfolio https://rudra496.github.io/site.
+Never: claim SOTA, invent numbers, tune the eval until MCTS wins, or restore a
+silent fake fallback. The honesty contract in README.md is binding.
 
-DAY 4 (Community Showcases & Discord Cross-Promotion):
-  • Post on Hugging Face Discussions, LangChain Discord, LlamaIndex Discord, and LocalAI Discord channels.
-  • Run interactive Q&A on GitHub Discussions.
-
-DAY 5-7 (Version 1.1 Update & Maintenance):
-  • Release `v1.1.0` with vLLM / Ollama direct integration.
-  • Highlight community contributions and update benchmark leaderboards.
-
-----------------------------------------------------------------------------------------------------
-3. COPY-PASTE SOCIAL POST TEMPLATES
-----------------------------------------------------------------------------------------------------
-
-Template A: Hacker News Submission
-----------------------------------
-Title: Show HN: HyperReason – Scale local LLM reasoning via adaptive MCTS & KV-cache sparsification
-URL: https://github.com/rudra496/hyper-reason
-Text:
-Hi HN! Creator Rudra Sarker here. Standard test-time search (like Monte Carlo Tree Search) boosts LLM math/reasoning accuracy significantly, but storing KV caches for hundreds of rollout branches quickly hits out-of-memory errors on consumer GPUs.
-
-HyperReason solves this with two components:
-1. Adaptive Entropy MCTS (AE-MCTS): Dynamically weights PUCT exploration based on real-time token prediction entropy.
-2. Token-Attentive KV Pruning (T-KVP): Calculates token salience scores and prunes low-entropy key-value states during search, cutting VRAM by 65%.
-
-Written in pure PyTorch/Python with zero heavy dependencies. Check out the interactive ASCII tree renderer in CLI! Would love your thoughts and feedback.
-
-Template B: Reddit r/LocalLLaMA Post
------------------------------------
-Title: Built an open-source test-time reasoning engine (HyperReason) that gives +19% MATH accuracy with 65% less VRAM
-Content:
-Hey r/LocalLLaMA! Over the past few weeks, we've been working on scaling test-time compute for open weights models like Llama 3 and DeepSeek-R1 distillations.
-
-One big issue with doing MCTS locally is VRAM explosion from holding KV cache states across deep search trees.
-
-We created **HyperReason** to fix this.
-Repo: https://github.com/rudra496/hyper-reason
-
-Key Features:
-- ⚡ 65% VRAM Reduction via T-KVP dynamic key-value pruning.
-- 🌳 Adaptive Entropy PUCT search (AE-MCTS).
-- 📊 Built-in self-consistency consensus verifier.
-- 💻 Interactive terminal ASCII tree search visualizer.
-
-Try it with `pip install hyper-reason`. Feedback and PRs super welcome!
-
-----------------------------------------------------------------------------------------------------
-4. FOLLOWER CONVERSION STRATEGY (100% NEW FOLLOWERS HOOK)
-----------------------------------------------------------------------------------------------------
-To convert repository star visitors into permanent GitHub followers for @rudra496:
-1. Add Sponsor / Follow CTA in GitHub README:
-   "⭐ If you find HyperReason helpful, please star the repository and follow @rudra496 for more cutting-edge AI research tools!"
-2. Connect to Portfolio: Link to https://rudra496.github.io/site in the repository header.
-3. Pin `hyper-reason` as the #1 repository on https://github.com/rudra496.
-====================================================================================================
+— Rudra Sarker

@@ -1,358 +1,397 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HyperReason — Enterprise Test-Time Reasoning Engine</title>
-    <meta name="description" content="HyperReason: Enterprise MCTS test-time reasoning compute scaling engine with FlashKV zero-copy paged cache management (-85% VRAM).">
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Inter:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-    <style>
-        :root {
-            --bg-primary: #030712;
-            --bg-card: #0b0f19;
-            --bg-card-hover: #131927;
-            --accent-cyan: #00f2fe;
-            --accent-blue: #3b82f6;
-            --accent-purple: #8b5cf6;
-            --accent-pink: #ec4899;
-            --accent-emerald: #10b981;
-            --text-primary: #f9fafb;
-            --text-secondary: #9ca3af;
-            --border-color: #1f2937;
-            --code-bg: #070a13;
-            --glow-cyan: rgba(0, 242, 254, 0.25);
-            --glow-purple: rgba(139, 92, 246, 0.25);
-        }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
-        body { background-color: var(--bg-primary); color: var(--text-primary); line-height: 1.6; overflow-x: hidden; }
-
-        /* Animated Canvas Background */
-        #bgCanvas {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            z-index: 0; pointer-events: none; opacity: 0.35;
-        }
-
-        /* Glassmorphism Navigation */
-        nav {
-            display: flex; justify-content: space-between; align-items: center; padding: 1.2rem 8%;
-            background: rgba(11, 15, 25, 0.85); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border-color);
-            position: sticky; top: 0; z-index: 100;
-        }
-
-        .logo {
-            display: flex; align-items: center; gap: 12px; font-size: 1.5rem; font-weight: 900;
-            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        }
-
-        .nav-links { display: flex; gap: 2rem; list-style: none; }
-        .nav-links a { color: var(--text-secondary); text-decoration: none; font-weight: 600; transition: color 0.3s; }
-        .nav-links a:hover { color: var(--accent-cyan); }
-
-        .btn-github {
-            display: flex; align-items: center; gap: 8px; padding: 0.6rem 1.4rem;
-            background: linear-gradient(135deg, #00f2fe 0%, #3b82f6 50%, #8b5cf6 100%); color: #fff;
-            font-weight: 700; border-radius: 10px; text-decoration: none; transition: transform 0.2s, box-shadow 0.2s;
-            box-shadow: 0 4px 15px var(--glow-cyan);
-        }
-        .btn-github:hover { transform: translateY(-2px); box-shadow: 0 6px 25px var(--glow-purple); }
-
-        /* Hero Section */
-        .hero { position: relative; z-index: 1; padding: 6rem 8% 4rem 8%; text-align: center; max-width: 1200px; margin: 0 auto; }
-        
-        .badge-pill {
-            display: inline-flex; align-items: center; gap: 8px; padding: 8px 20px;
-            background: rgba(0, 242, 254, 0.1); border: 1px solid rgba(0, 242, 254, 0.4);
-            border-radius: 50px; font-size: 0.9rem; color: var(--accent-cyan); margin-bottom: 1.8rem; font-weight: 700;
-            letter-spacing: 0.5px; box-shadow: 0 0 20px rgba(0, 242, 254, 0.2);
-        }
-
-        .hero h1 {
-            font-size: 4rem; font-weight: 900; line-height: 1.15; margin-bottom: 1.5rem;
-            background: linear-gradient(180deg, #ffffff 0%, #c7d2fe 50%, #818cf8 100%);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        }
-
-        .hero p { font-size: 1.25rem; color: var(--text-secondary); max-width: 880px; margin: 0 auto 2.8rem auto; }
-        .hero-cta { display: flex; justify-content: center; gap: 1.2rem; }
-
-        .code-box {
-            background: var(--code-bg); border: 1px solid var(--border-color); padding: 1rem 1.8rem;
-            border-radius: 12px; font-family: 'Fira Code', monospace; display: flex; align-items: center;
-            gap: 15px; color: var(--accent-cyan); font-size: 1.1rem; box-shadow: 0 10px 30px rgba(0,0,0,0.6);
-        }
-
-        .copy-btn { background: transparent; border: none; color: var(--text-secondary); cursor: pointer; font-size: 1.2rem; }
-        .copy-btn:hover { color: #fff; }
-
-        /* Feature Cards Grid */
-        .features-grid {
-            position: relative; z-index: 1; display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 2rem; padding: 4rem 8%; max-width: 1350px; margin: 0 auto;
-        }
-
-        .card {
-            background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 18px;
-            padding: 2.2rem; transition: all 0.3s ease; position: relative; overflow: hidden;
-        }
-        .card::before {
-            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 3px;
-            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-purple)); opacity: 0; transition: opacity 0.3s;
-        }
-        .card:hover { transform: translateY(-6px); border-color: var(--accent-cyan); box-shadow: 0 15px 35px var(--glow-cyan); }
-        .card:hover::before { opacity: 1; }
-
-        .card-icon {
-            font-size: 2.5rem; margin-bottom: 1.2rem;
-            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        }
-
-        .card h3 { font-size: 1.4rem; margin-bottom: 0.8rem; font-weight: 800; }
-        .card p { color: var(--text-secondary); font-size: 0.98rem; }
-
-        /* Calculator Section */
-        .calc-section {
-            position: relative; z-index: 1; background: var(--bg-card); border: 1px solid var(--border-color);
-            border-radius: 20px; padding: 3.5rem; max-width: 1150px; margin: 4rem auto;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-        }
-
-        .calc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: center; }
-        .slider-group { margin-bottom: 1.8rem; }
-        .slider-group label { display: block; margin-bottom: 0.6rem; color: var(--text-secondary); font-weight: 600; }
-        .slider { width: 100%; height: 10px; background: #1f2937; border-radius: 5px; outline: none; }
-
-        .stat-card {
-            background: var(--code-bg); border: 1px solid var(--border-color); padding: 1.8rem;
-            border-radius: 14px; text-align: center;
-        }
-        .stat-val { font-size: 2.8rem; font-weight: 900; color: var(--accent-cyan); }
-
-        /* Simulator Section */
-        .simulator-section { position: relative; z-index: 1; padding: 4rem 8%; max-width: 1250px; margin: 0 auto; }
-        .sim-container {
-            background: var(--code-bg); border: 1px solid var(--border-color); border-radius: 16px;
-            padding: 2.2rem; font-family: 'Fira Code', monospace; color: #4ade80; box-shadow: 0 20px 50px rgba(0,0,0,0.6);
-        }
-        .sim-header {
-            display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;
-            padding-bottom: 1rem; border-bottom: 1px solid var(--border-color); color: var(--text-secondary);
-        }
-        .sim-btn {
-            background: linear-gradient(135deg, #00f2fe, #3b82f6); color: #000; border: none;
-            padding: 10px 22px; font-weight: 800; border-radius: 8px; cursor: pointer; transition: transform 0.2s;
-        }
-        .sim-btn:hover { transform: scale(1.03); }
-        .sim-output { white-space: pre-wrap; line-height: 1.5; font-size: 0.95rem; min-height: 260px; }
-
-        footer { position: relative; z-index: 1; text-align: center; padding: 3.5rem 8%; border-top: 1px solid var(--border-color); color: var(--text-secondary); }
-        footer a { color: var(--accent-cyan); text-decoration: none; font-weight: 600; }
-    </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>HyperReason — honest test-time compute for local LLMs</title>
+<meta name="description" content="HyperReason v2: a genuinely-working AE-MCTS test-time search engine with projected KV-cache memory accounting. Real, honest, interactive.">
+<style>
+  :root{
+    --bg:#0a0e17; --bg2:#0f1623; --card:#131c2b; --line:#1f2c40; --txt:#e6edf6;
+    --mut:#8aa0bd; --acc:#00e5ff; --acc2:#7c5cff; --ok:#34d399; --warn:#fbbf24;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    --sans:system-ui,-apple-system,Segoe UI,Roboto,Inter,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--txt);font-family:var(--sans);line-height:1.55}
+  a{color:var(--acc);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 20px}
+  header{border-bottom:1px solid var(--line);position:sticky;top:0;background:rgba(10,14,23,.85);backdrop-filter:blur(8px);z-index:10}
+  .nav{display:flex;align-items:center;gap:14px;padding:14px 0}
+  .logo{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:-.02em}
+  .logo svg{width:26px;height:26px}
+  .nav .spacer{flex:1}
+  .badge{font:600 12px var(--mono);color:var(--bg);background:linear-gradient(90deg,var(--acc),var(--acc2));padding:4px 10px;border-radius:999px}
+  .ghost{border:1px solid var(--line);color:var(--txt);padding:8px 14px;border-radius:8px;font-weight:600}
+  .ghost:hover{border-color:var(--acc)}
+  .hero{padding:72px 0 40px;text-align:center}
+  .hero h1{font-size:clamp(34px,6vw,60px);margin:0 0 8px;letter-spacing:-.03em;line-height:1.05;
+    background:linear-gradient(90deg,#fff,#9fd6ff 60%,var(--acc));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .hero .sub{font-size:clamp(16px,2.4vw,21px);color:var(--mut);max-width:720px;margin:0 auto 22px}
+  .pill{display:inline-block;font:600 13px var(--mono);color:var(--ok);border:1px solid #1f4a39;background:#0c1f18;padding:5px 12px;border-radius:999px;margin-bottom:18px}
+  .cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:8px}
+  .install{font-family:var(--mono);background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 16px;display:inline-flex;align-items:center;gap:12px}
+  .install code{color:var(--acc)}
+  .install button{background:none;border:none;color:var(--mut);cursor:pointer;font-size:14px}
+  .install button:hover{color:var(--txt)}
+  section{padding:46px 0;border-top:1px solid var(--line)}
+  h2{font-size:clamp(24px,3.6vw,34px);margin:0 0 8px;letter-spacing:-.02em}
+  .lede{color:var(--mut);max-width:680px;margin:0 0 24px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
+  .card h3{margin:0 0 6px;font-size:16px;display:flex;gap:8px;align-items:center}
+  .card p{margin:0;color:var(--mut);font-size:14px}
+  .demo{display:grid;grid-template-columns:1fr;gap:18px}
+  .console{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
+  .row{display:flex;gap:12px;flex-wrap:wrap;align-items:end}
+  textarea{width:100%;min-height:70px;background:var(--bg2);color:var(--txt);border:1px solid var(--line);border-radius:10px;padding:12px;font-family:var(--sans);font-size:15px;resize:vertical}
+  textarea:focus{outline:none;border-color:var(--acc)}
+  label{font-size:12px;color:var(--mut);font-family:var(--mono);display:block;margin-bottom:4px}
+  .ctl{display:flex;flex-direction:column}
+  input[type=range]{accent-color:var(--acc)}
+  .btn{background:linear-gradient(90deg,var(--acc2),var(--acc));color:#04121a;border:none;font-weight:800;padding:12px 20px;border-radius:10px;cursor:pointer;font-size:15px}
+  .btn:disabled{opacity:.5;cursor:wait}
+  .panels{display:grid;grid-template-columns:1.4fr 1fr;gap:18px}
+  @media(max-width:820px){.panels{grid-template-columns:1fr}}
+  .tree{background:var(--bg2);border:1px solid var(--line);border-radius:10px;min-height:340px;overflow:auto}
+  .tree svg{display:block}
+  .metrics{font-family:var(--mono);font-size:13px}
+  .metrics .k{color:var(--mut)}
+  .metrics .v{color:var(--txt)}
+  .metrics .row2{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px dashed var(--line)}
+  .bar{height:8px;background:var(--bg2);border-radius:4px;overflow:hidden;margin-top:4px}
+  .bar > i{display:block;height:100%;background:linear-gradient(90deg,var(--acc2),var(--acc))}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line)}
+  th{color:var(--mut);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.04em}
+  td.num,th.num{text-align:right;font-family:var(--mono)}
+  .note{font-size:13px;color:var(--mut);background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+  .ok{color:var(--ok)} .warn{color:var(--warn)} .acc{color:var(--acc)}
+  footer{border-top:1px solid var(--line);padding:30px 0;color:var(--mut);font-size:14px}
+  .skel{color:var(--mut);font-style:italic}
+  code{font-family:var(--mono);background:var(--bg2);padding:1px 5px;border-radius:4px;font-size:.9em}
+  .honesty li{margin-bottom:8px}
+  .honesty b{color:var(--txt)}
+</style>
 </head>
 <body>
+<header>
+  <div class="wrap nav">
+    <div class="logo">
+      <svg viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="14" stroke="url(#g)" stroke-width="2"/><circle cx="16" cy="16" r="3.2" fill="var(--acc)"/><g stroke="var(--acc2)" stroke-width="1.6"><line x1="16" y1="16" x2="27" y2="8"/><line x1="16" y1="16" x2="6" y2="11"/><line x1="16" y1="16" x2="11" y2="27"/><line x1="16" y1="16" x2="25" y2="24"/></g><circle cx="27" cy="8" r="2" fill="var(--acc2)"/><circle cx="6" cy="11" r="2" fill="var(--acc2)"/><circle cx="11" cy="27" r="2" fill="var(--acc2)"/><circle cx="25" cy="24" r="2" fill="var(--acc2)"/><defs><linearGradient id="g" x1="0" y1="0" x2="32" y2="32"><stop stop-color="var(--acc)"/><stop offset="1" stop-color="var(--acc2)"/></linearGradient></defs></svg>
+      HyperReason
+    </div>
+    <span class="badge">v2 · honest rebuild</span>
+    <div class="spacer"></div>
+    <a class="ghost" href="https://github.com/rudra496/hyper-reason">★ GitHub</a>
+    <a class="ghost" href="#demo">Live demo ↓</a>
+  </div>
+</header>
 
-    <canvas id="bgCanvas"></canvas>
+<div class="wrap">
+  <div class="hero">
+    <span class="pill">● real model calls · no fabricated benchmarks</span>
+    <h1>Test-time compute that<br>actually runs.</h1>
+    <p class="sub">HyperReason drives a <b>real language model</b> through Adaptive-Entropy MCTS, then reports
+      <b>honest</b> projected KV-cache savings. Every number on this page is computed live in your browser
+      by the same engine you <code>pip install</code> — or labeled <i>projected</i> when it can't be measured.</p>
+    <div class="cta">
+      <div class="install"><code>pip install hyper-reason</code>
+        <button onclick="navigator.clipboard.writeText('pip install hyper-reason')">copy</button>
+      </div>
+      <a class="btn" href="#demo">Try the engine live</a>
+    </div>
+  </div>
+</div>
 
-    <nav>
-        <div class="logo">
-            <i class="fa-solid fa-network-wired"></i> HyperReason
+<section id="demo">
+  <div class="wrap">
+    <h2>Live engine — runs in your browser</h2>
+    <p class="lede">This is the <b>actual AE-MCTS engine</b>, ported to JavaScript, searching in real time.
+      It uses a deterministic in-browser sampler so it needs no API key and loads instantly.
+      The <code>pip</code> package drives the <b>same algorithm</b> against a real model
+      (Z.AI GLM / Ollama / HuggingFace). A JS↔Python parity test guards the port in CI.</p>
+
+    <div class="console">
+      <div class="row" style="margin-bottom:12px">
+        <div style="flex:1;min-width:260px">
+          <label>Problem</label>
+          <textarea id="problem">Janet has 3 boxes of 12 apples. She gives away 5 and eats 2. How many apples remain?</textarea>
         </div>
-        <ul class="nav-links">
-            <li><a href="#features">Features</a></li>
-            <li><a href="#calculator">VRAM Calculator</a></li>
-            <li><a href="#demo">Live Demo</a></li>
-            <li><a href="https://github.com/rudra496/hyper-reason" target="_blank">GitHub</a></li>
-        </ul>
-        <a href="https://github.com/rudra496/hyper-reason" target="_blank" class="btn-github">
-            <i class="fa-brands fa-github"></i> Star on GitHub
-        </a>
-    </nav>
+        <div class="ctl"><label>Simulations <span id="simsV">6</span></label><input id="sims" type="range" min="2" max="16" value="6" style="width:140px"></div>
+        <div class="ctl"><label>K samples <span id="kV">3</span></label><input id="k" type="range" min="2" max="4" value="3" style="width:110px"></div>
+        <div class="ctl"><label>Max depth <span id="dV">3</span></label><input id="depth" type="range" min="2" max="5" value="3" style="width:110px"></div>
+        <button class="btn" id="run">Run AE-MCTS</button>
+      </div>
+      <div class="note" id="status">Ready. The sampler below is a <b>deterministic in-browser heuristic</b>, clearly labeled
+        <code>is_live=false</code> — it exists so you can see the search mechanics without a key. For real reasoning,
+        run the package against a model (see “Run with a real model” below).</div>
 
-    <section class="hero">
-        <div class="badge-pill">
-            <i class="fa-solid fa-bolt"></i> FlashKV Zero-Copy Paged Cache • Up to 85% VRAM Reduction
+      <div class="panels" style="margin-top:16px">
+        <div class="tree"><svg id="tree" width="100%" height="360"></svg></div>
+        <div>
+          <div class="metrics">
+            <div class="row2"><span class="k">backend</span><span class="v" id="m-backend">mock-deterministic-heuristic (is_live=false)</span></div>
+            <div class="row2"><span class="k">boxed answer</span><span class="v acc" id="m-answer">—</span></div>
+            <div class="row2"><span class="k">confidence (self-consistency)</span><span class="v" id="m-conf">—</span>
+              <div class="bar" style="flex-basis:100%"><i id="m-confbar" style="width:0"></i></div></div>
+            <div class="row2"><span class="k">model calls</span><span class="v" id="m-calls">—</span></div>
+            <div class="row2"><span class="k">max depth reached</span><span class="v" id="m-depth">—</span></div>
+            <div class="row2"><span class="k">entropy source</span><span class="v" style="font-size:11px">sample_diversity (no logprobs)</span></div>
+            <hr style="border-color:var(--line)">
+            <div class="row2"><span class="k">FlashKV naive blocks</span><span class="v" id="m-naive">—</span></div>
+            <div class="row2"><span class="k">FlashKV CoW blocks</span><span class="v" id="m-cow">—</span></div>
+            <div class="row2"><span class="k">projected saved tokens</span><span class="v ok" id="m-savedtok">—</span></div>
+            <div class="row2"><span class="k">projected saved (8B-class)</span><span class="v warn" id="m-savedmb">—</span></div>
+            <div class="note" style="margin-top:8px">FlashKV figures are a <b>projected simulator</b> from real per-node token counts — no real GPU. MB uses an explicit Llama-3-8B-class bytes/token assumption.</div>
+          </div>
         </div>
-        <h1>Enterprise Test-Time Compute<br>Reasoning Scaling Engine</h1>
-        <p>
-            HyperReason combines Adaptive Entropy MCTS, Speculative Parallel Rollouts, and FlashKV Zero-Copy Memory Sharing to scale LLM reasoning accuracy across local GPUs and enterprise clusters.
-        </p>
+      </div>
+    </div>
+  </div>
+</section>
 
-        <div class="hero-cta">
-            <div class="code-box">
-                <code>pip install hyper-reason</code>
-                <button class="copy-btn" onclick="navigator.clipboard.writeText('pip install hyper-reason')"><i class="fa-regular fa-copy"></i></button>
-            </div>
-        </div>
-    </section>
+<section id="how">
+  <div class="wrap">
+    <h2>How it works — three honest steps</h2>
+    <div class="grid">
+      <div class="card"><h3>① Sample</h3><p>At each node the engine asks the model for K candidate next-steps. Priors and entropy come from those real samples — never hardcoded.</p></div>
+      <div class="card"><h3>② Search</h3><p>AE-PUCT selection balances value and <b>sample-diversity entropy</b> (a logprob-free uncertainty proxy, since the gateway returns none). Bounded budget: sims × K calls.</p></div>
+      <div class="card"><h3>③ Vote</h3><p>The final answer is majority-vote (self-consistency) over the terminal trajectories the model actually produced. Confidence = agreement fraction.</p></div>
+      <div class="card"><h3>④ Account</h3><p>FlashKV then projects CoW paged-cache savings over the real tree — in tokens (model-agnostic) and projected MB behind a disclosed bytes/token.</p></div>
+    </div>
+  </div>
+</section>
 
-    <!-- Features Grid -->
-    <section class="features-grid" id="features">
-        <div class="card">
-            <div class="card-icon"><i class="fa-solid fa-memory"></i></div>
-            <h3>FlashKV Zero-Copy</h3>
-            <p>Tree-structured Copy-on-Write block pointer sharing eliminates duplicate KV cache allocations, cutting VRAM overhead by 85%.</p>
-        </div>
-        <div class="card">
-            <div class="card-icon"><i class="fa-solid fa-rocket"></i></div>
-            <h3>Speculative Parallel Rollouts</h3>
-            <p>Accelerates MCTS test-time search by 4.5x using parallel draft candidate generation verified in a single batched pass.</p>
-        </div>
-        <div class="card">
-            <div class="card-icon"><i class="fa-solid fa-compress"></i></div>
-            <h3>INT8 / INT4 Quantization</h3>
-            <p>Symmetric & asymmetric key-value quantization engine delivering an additional 50% memory reduction on top of FlashKV.</p>
-        </div>
-        <div class="card">
-            <div class="card-icon"><i class="fa-solid fa-users-gear"></i></div>
-            <h3>Multi-Agent Persona Tree</h3>
-            <p>Orchestrates Proposer, Verifier, and Refiner agent collaboration during MCTS tree expansion rollouts.</p>
-        </div>
-        <div class="card">
-            <div class="card-icon"><i class="fa-solid fa-cube"></i></div>
-            <h3>Interactive 3D WebGL Graph</h3>
-            <p>Generates standalone 3D physics-based particle graphs of MCTS reasoning rollouts in browser canvas.</p>
-        </div>
-        <div class="card">
-            <div class="card-icon"><i class="fa-solid fa-brain"></i></div>
-            <h3>Reasoning Memory Store</h3>
-            <p>Persistent vector-free key pattern memory storing high-confidence reasoning trajectories for instant recall.</p>
-        </div>
-    </section>
+<section id="bench">
+  <div class="wrap">
+    <h2>Real benchmark — GSM8K-mini</h2>
+    <p class="lede">Run against the live Z.AI GLM gateway. No cherry-picking: the first N problems of the real
+      GSM8K test split, fixed config, raw per-problem traces downloadable. The headline is aggregated from JSONL by a
+      separate script — it cannot be invented after the fact.</p>
+    <div class="card">
+      <table id="benchTable">
+        <thead><tr><th>method</th><th class="num">accuracy</th><th class="num">unparsable</th><th class="num">mean tokens</th><th class="num">mean latency</th></tr></thead>
+        <tbody id="benchBody">
+          <tr><td>greedy (T=0, 1 sample)</td><td class="num ok">95.0% (19/20)</td><td class="num">0%</td><td class="num">185</td><td class="num">3.5s</td></tr>
+          <tr><td>self-consistency (K=4)</td><td class="num">90.0% (18/20)</td><td class="num">0%</td><td class="num">750</td><td class="num">11.7s</td></tr>
+          <tr><td>AE-MCTS (sims=6,k=2,d≤3)</td><td class="num">85.0% (17/20)</td><td class="num">0%</td><td class="num">669</td><td class="num">14.2s</td></tr>
+        </tbody>
+      </table>
+      <p class="note" id="benchNote" style="margin-top:12px"><b>The honest reading:</b> on GSM8K-mini (N=20) with GLM-4.6, greedy already scores 95% —
+        a strong base model near the ceiling. Our <i>modest-budget</i> AE-MCTS (sims=6, k=2, depth≤3) scores 85%: test-time search
+        does <b>not</b> pay off where the model is already this good on easy problems. This is the opposite of a SOTA claim — it is the
+        honest baseline. The engine is built for harder problems / weaker models / bigger budgets; run your own with
+        <code>python eval/gsm8k_mini.py --n 100 --sims 16 --k 4</code>. Raw per-problem traces:
+        <a href="https://github.com/rudra496/hyper-reason/blob/main/eval/runs/20260810-210422.jsonl">eval/runs/*.jsonl</a>.</p>
+    </div>
+  </div>
+</section>
 
-    <!-- Interactive Calculator -->
-    <section class="calc-section" id="calculator">
-        <h2 style="text-align: center; margin-bottom: 2.5rem; font-size: 2.2rem;">FlashKV VRAM Savings Calculator</h2>
-        <div class="calc-grid">
-            <div>
-                <div class="slider-group">
-                    <label>Tree Search Rollout Branches: <span id="branchesVal" style="color:#00f2fe; font-weight:800;">16</span></label>
-                    <input type="range" min="4" max="64" value="16" class="slider" id="branchesSlider" oninput="updateCalc()">
-                </div>
-                <div class="slider-group">
-                    <label>Reasoning Sequence Length: <span id="tokensVal" style="color:#00f2fe; font-weight:800;">2048</span> tokens</label>
-                    <input type="range" min="512" max="8192" step="512" value="2048" class="slider" id="tokensSlider" oninput="updateCalc()">
-                </div>
-            </div>
-            <div>
-                <div class="stat-card">
-                    <div style="color:var(--text-secondary); font-size:0.95rem;">Standard MCTS VRAM Overhead</div>
-                    <div class="stat-val" id="stdVram" style="color:#ef4444;">32.8 GB</div>
-                </div>
-                <div class="stat-card" style="margin-top: 1.2rem;">
-                    <div style="color:var(--text-secondary); font-size:0.95rem;">HyperReason FlashKV VRAM</div>
-                    <div class="stat-val" id="flashVram" style="color:#10b981;">4.9 GB</div>
-                    <div style="color:#10b981; font-weight:800; margin-top:0.4rem;" id="savingsPct">85.1% VRAM Reduction</div>
-                </div>
-            </div>
-        </div>
-    </section>
+<section id="realmodel">
+  <div class="wrap">
+    <h2>Run with a real model</h2>
+    <p class="lede">The browser demo uses a deterministic sampler on purpose — it keeps this page keyless and instant.
+      For genuine reasoning, the package drives a real model server-side (your key never touches this static page).</p>
+    <div class="grid">
+      <div class="card"><h3>Python (1 line)</h3><p><code>from hyper_reason import wrap_model, GLMBackend</code><br>
+        <code>wrap_model(GLMBackend()).reason("…")</code></p></div>
+      <div class="card"><h3>Ollama (local)</h3><p><code>wrap_model(OllamaBackend("llama3.1:8b"))</code> — runs fully offline on your GPU.</p></div>
+      <div class="card"><h3>HuggingFace</h3><p><code>TransformersBackend("Qwen/Qwen2.5-1.5B-Instruct")</code> — needs <code>pip install hyper-reason[transformers]</code>.</p></div>
+      <div class="card"><h3>No-install</h3><p>A Colab notebook (coming with the v2 release) runs GLM server-side — paste your key in the runtime, not the page.</p></div>
+    </div>
+  </div>
+</section>
 
-    <!-- Simulator Section -->
-    <section class="simulator-section" id="demo">
-        <h2 style="text-align: center; margin-bottom: 1.8rem; font-size: 2.2rem;">Interactive Terminal MCTS Visualizer</h2>
-        <div class="sim-container">
-            <div class="sim-header">
-                <span>HYPERREASON REASONING PLAYGROUND</span>
-                <button class="sim-btn" onclick="runSimulation()">Execute AE-MCTS Engine</button>
-            </div>
-            <div class="sim-output" id="simOutput">Click 'Execute AE-MCTS Engine' to launch search simulation...</div>
-        </div>
-    </section>
+<section id="honesty" class="honesty">
+  <div class="wrap">
+    <h2>The honesty contract</h2>
+    <p class="lede">v1.x of this repo shipped fabricated benchmarks (a wrapper that never called a model). v2 is a full rebuild
+      bound by these rules:</p>
+    <div class="grid">
+      <div class="card"><h3>Real or labeled</h3><p>Every number is either produced by a runnable command whose config is given, or explicitly tagged <b>projected / simulated</b> with the assumption stated.</p></div>
+      <div class="card"><h3>No fake fallbacks</h3><p>Missing model/daemon → the backend <b>raises</b>, never returns invented text or token counts. (v1.x silently faked an Ollama response when offline.)</p></div>
+      <div class="card"><h3>Entropy, stated</h3><p>A sample-based uncertainty proxy labeled <b>sample-diversity entropy (no logprobs)</b>. The gateway returns no per-token distribution, so we don’t pretend we have one.</p></div>
+      <div class="card"><h3>Verifiable</h3><p>Raw per-problem JSONL + aggregator are in <code>eval/</code>; a JS↔Python parity test pins the browser port to the package.</p></div>
+    </div>
+  </div>
+</section>
 
-    <footer>
-        <p>Created by <a href="https://github.com/rudra496" target="_blank">Rudra Sarker</a> & Buggz • Licensed under MIT</p>
-        <p style="margin-top: 6px; font-size: 0.85rem;">Portfolio: <a href="https://rudra496.github.io/site" target="_blank">https://rudra496.github.io/site</a></p>
-    </footer>
+<footer>
+  <div class="wrap">
+    <b>HyperReason v2</b> · MIT license · built by <a href="https://github.com/rudra496">Rudra Sarker</a> ·
+    <a href="https://github.com/rudra496/hyper-reason">source</a> ·
+    <a href="https://github.com/rudra496/hyper-reason/blob/main/eval/CONFIG.md">eval config</a>
+  </div>
+</footer>
 
-    <script>
-        // Particle Background Animation
-        const canvas = document.getElementById("bgCanvas");
-        const ctx = canvas.getContext("2d");
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+<script src="engine.js"></script>
+<script>
+/* Pure engine functions (shannonFromCounts, normalizeStep, sampleDiversityEntropy,
+   priorsFromDiversity, extractFinalAnswer, selfConsistency) live in engine.js and are
+   parity-tested against the Python package by tests/test_js_parity.py. */
 
-        const particles = [];
-        for(let i=0; i<60; i++) {
-            particles.push({
-                x: Math.random()*canvas.width,
-                y: Math.random()*canvas.height,
-                radius: Math.random()*2+1,
-                vx: (Math.random()-0.5)*0.8,
-                vy: (Math.random()-0.5)*0.8
-            });
-        }
+// ---- deterministic in-browser sampler (clearly labeled, NOT a model) ----
+const STEP_BANK=[
+  "Let me identify the given quantities and what's being asked.",
+  "First, I'll translate the problem into an arithmetic relationship.",
+  "I should compute the primary quantity before applying reductions.",
+  "Now I'll perform the intermediate calculation step by step.",
+  "Subtracting the deductions gives the remaining amount.",
+  "Let me double-check the arithmetic before committing.",
+  "The final answer follows directly from the chain above."
+];
+function hashStr(s){ let h=2166136261>>>0; for(let i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619); } return h>>>0; }
+function mockSample(prompt, k){
+  const nums=(prompt.match(/-?\d+(?:\.\d+)?/g)||[]); const out=[]; const seen=new Set(); let i=0;
+  while(out.length<k && i<k*4){
+    const s=hashStr(prompt+'::'+i); const opener=STEP_BANK[s%STEP_BANK.length];
+    let text=opener;
+    if(nums.length){ const a=nums[s%nums.length], b=nums[(s+1)%nums.length];
+      const prod=Number(a)*Number(b); text=`${opener} Using ${a} and ${b}: intermediate = ${prod}.`; }
+    const norm=text.toLowerCase().trim();
+    if(!seen.has(norm)){ seen.add(norm); out.push({text, prompt_tokens:Math.ceil(prompt.length/4), completion_tokens:Math.ceil(text.length/4)}); }
+    i++;
+  }
+  while(out.length<k) out.push(out[out.length-1]||{text:".",prompt_tokens:1,completion_tokens:1});
+  return out;
+}
 
-        function drawParticles() {
-            ctx.clearRect(0,0,canvas.width,canvas.height);
-            ctx.fillStyle = "#00f2fe";
-            ctx.strokeStyle = "rgba(0, 242, 254, 0.15)";
+// ---- tree node (mirrors engine/mcts.py TreeNode) ----
+class Node{constructor(state,parent,prior){this.state=state;this.parent=parent;this.prior=prior||1;
+  this.children=[];this.visit_count=0;this.total_value=0;this.mean_value=0;this.entropy=0;
+  this.depth=parent?parent.depth+1:0;this.is_terminal=false;this.expanded=false;
+  this.kv_tokens=Math.max(1,Math.ceil(state.length/4));this.completion_tokens=0;}}
+Node.prototype.ucb=function(cPuct,a){ if(!this.parent)return 0;
+  const pv=Math.max(1,this.parent.visit_count);
+  return this.mean_value + cPuct*this.prior*(Math.sqrt(pv)/(1+this.visit_count))*(1+a*this.entropy); };
+Node.prototype.update=function(v){ this.visit_count++; this.total_value+=v; this.mean_value=this.total_value/this.visit_count; };
 
-            particles.forEach((p, i) => {
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, p.radius, 0, Math.PI*2);
-                ctx.fill();
+const PROMPT_TPL=(problem)=>`Solve the problem step by step. Show each reasoning step on its own line.\nAt the end, put ONLY the final numerical answer in \\boxed{}.\n\nProblem: ${problem}\n`;
 
-                for(let j=i+1; j<particles.length; j++) {
-                    const dist = Math.hypot(p.x - particles[j].x, p.y - particles[j].y);
-                    if(dist < 120) {
-                        ctx.beginPath();
-                        ctx.moveTo(p.x, p.y);
-                        ctx.lineTo(particles[j].x, particles[j].y);
-                        ctx.stroke();
-                    }
-                }
+// ---- the search (mirrors ReasonEngine.reason) ----
+async function runSearch(problem, cfg, onStep){
+  const root=new Node(PROMPT_TPL(problem)); let modelCalls=0, depthReached=0;
+  const cPuct=1.414, alpha=cfg.entropy_alpha||0.15;
+  for(let sim=0; sim<cfg.num_simulations; sim++){
+    // selection
+    let node=root, path=[root];
+    if(!(root.expanded||root.is_terminal||root.depth>=cfg.max_depth)){
+      // root expandable
+    } else {
+      let guard=0; let ok=true;
+      while(!(node.expanded)||node.depth<cfg.max_depth){
+        guard++; if(guard>cfg.max_depth+4){ok=false;break;}
+        if(node.is_terminal||node.depth>=cfg.max_depth||!node.children.length){ok=false;break;}
+        const kids=node.children.filter(c=>!c.is_terminal); if(!kids.length){ok=false;break;}
+        const unexp=kids.filter(c=>!c.expanded); const pool=unexp.length?unexp:kids;
+        node=pool.reduce((a,b)=>a.ucb(cPuct,alpha)>=b.ucb(cPuct,alpha)?a:b);
+        path.push(node);
+        if(!node.expanded&&!node.is_terminal&&node.depth<cfg.max_depth) break;
+      }
+      if(!ok){ /* no expandable node — evaluate a terminal on path */ }
+    }
+    // expansion or terminal value
+    let value=0;
+    if(!node.expanded && !node.is_terminal && node.depth<cfg.max_depth){
+      node.expanded=true;
+      const samples=mockSample(node.state, cfg.k_samples); modelCalls+=samples.length;
+      const texts=samples.map(s=>s.text); const entropy=sampleDiversityEntropy(texts);
+      const priors=priorsFromDiversity(texts); node.entropy=entropy;
+      let pt=0,ct=0,maxTV=0;
+      samples.forEach((s,idx)=>{
+        const child=new Node(node.state+"\n"+s.text, node, priors[idx]||1/cfg.k_samples);
+        child.completion_tokens=s.completion_tokens; pt+=s.prompt_tokens; ct+=s.completion_tokens;
+        child.is_terminal = (s.text.indexOf("\\boxed")>=0) || (child.depth>=cfg.max_depth);
+        if(child.is_terminal){ const v=extractFinalAnswer(child.state)!=="__unparsable__"?1:0; child._v=v; maxTV=Math.max(maxTV,v); }
+        node.children.push(child);
+      });
+      depthReached=Math.max(depthReached,node.depth+1); value=maxTV;
+    } else {
+      value = node._v!==undefined ? node._v : (node.is_terminal?(extractFinalAnswer(node.state)!=="__unparsable__"?1:0):0);
+    }
+    path.forEach(n=>n.update(value));
+    if(onStep) await onStep(sim+1, root);
+  }
+  // collect terminals -> self consistency
+  const terms=[]; const st=[root]; while(st.length){ const n=st.pop(); if(n.is_terminal)terms.push(n); st.push(...n.children); }
+  const [answer,conf,dist]=selfConsistency(terms.map(t=>t.state));
+  return {root, answer, conf, dist, modelCalls, depthReached, terms};
+}
 
-                p.x += p.vx; p.y += p.vy;
-                if(p.x<0 || p.x>canvas.width) p.vx*=-1;
-                if(p.y<0 || p.y>canvas.height) p.vy*=-1;
-            });
-            requestAnimationFrame(drawParticles);
-        }
-        drawParticles();
+// ---- FlashKV projected accounting (mirrors engine/flashkv.py) ----
+const BYTES_PER_TOKEN=2*32*8*128*2; // Llama-3-8B-class, disclosed
+function flashKV(root){
+  if(!root) return {naive:0,cow:0,saved:0,pct:0,mb:0};
+  const nodes=[]; (function w(n){ nodes.push(n); n.children.forEach(w); })(root);
+  const tok={}; nodes.forEach(n=>tok[nid(n)]=n.kv_tokens);
+  let naive=0,cow=0; const refs={};
+  nodes.forEach(n=>{
+    const full=Math.max(0,n.kv_tokens); naive+=full;
+    const par=n.parent?tok[nid(n.parent)]:0; cow+=Math.max(0,full-par);
+    if(n.parent){ refs[nid(n.parent)]=(refs[nid(n.parent)]||0)+1; }
+  });
+  const naiveBl=Math.ceil(naive/16), cowBl=Math.ceil(cow/16), saved=naive-cow;
+  return {naive:naiveBl, cow:cowBl, saved, pct:naive?(saved/naive*100):0, mb:saved*BYTES_PER_TOKEN/1048576};
+}
+let _id=0; function nid(n){ if(!n.__id)n.__id=++_id; return n.__id; }
 
-        function updateCalc() {
-            const branches = parseInt(document.getElementById("branchesSlider").value);
-            const tokens = parseInt(document.getElementById("tokensSlider").value);
-            document.getElementById("branchesVal").innerText = branches;
-            document.getElementById("tokensVal").innerText = tokens;
+/* ============================ UI wiring ================================== */
+const $=id=>document.getElementById(id);
+function sliders(){$("simsV").textContent=$("sims").value;$("kV").textContent=$("k").value;$("dV").textContent=$("depth").value;}
+["sims","k","depth"].forEach(i=>$(i).addEventListener("input",sliders)); sliders();
 
-            const baseKvmMb = (tokens * 0.002);
-            const stdVramGb = ((baseKvmMb * branches) / 1024.0) + 12.0;
-            const flashVramGb = ((baseKvmMb * (1.0 + branches * 0.12)) / 1024.0) + 12.0;
-            const savings = ((stdVramGb - flashVramGb) / stdVramGb) * 100;
+function renderTree(root){
+  const svg=$("tree"); svg.innerHTML=""; const W=svg.clientWidth||520, H=360;
+  svg.setAttribute("viewBox",`0 0 ${W} ${H}`);
+  const leaves=[]; (function f(n){ if(!n.children.length)leaves.push(n); n.children.forEach(f); })(root);
+  let maxDepth=0; (function d(n){ maxDepth=Math.max(maxDepth,n.depth); n.children.forEach(d); })(root);
+  maxDepth=Math.max(1,maxDepth);
+  const ymap=new Map(); leaves.forEach((n,i)=>ymap.set(n,i));
+  const posY=n=>{ if(ymap.has(n)) return (ymap.get(n)+0.5)/Math.max(1,leaves.length)*H;
+    let s=0,c=0; for(const ch of n.children){ const y=posY(ch); if(isFinite(y)){s+=y;c++;} }
+    return c? s/c : H/2; };
+  const posX=n=> 30 + (n.depth/maxDepth) * (W-60);
+  const pos=n=>({x:posX(n),y:posY(n)});
+  // edges
+  const edges=[]; (function e(n){ n.children.forEach(ch=>{edges.push([n,ch]); e(ch);}); })(root);
+  let g='<g>';
+  edges.forEach(([a,b])=>{ const pa=pos(a),pb=pos(b);
+    g+=`<path d="M${pa.x} ${pa.y} C ${(pa.x+pb.x)/2} ${pa.y}, ${(pa.x+pb.x)/2} ${pb.y}, ${pb.x} ${pb.y}" stroke="#243248" stroke-width="1.4" fill="none"/>`; });
+  // nodes
+  (function d(n){ const p=pos(n); const r=Math.min(7,3+n.visit_count*0.9);
+    const col=n.is_terminal?(extractFinalAnswer(n.state)!=="__unparsable__"?"#34d399":"#fbbf24"):"#00e5ff";
+    g+=`<circle cx="${p.x}" cy="${p.y}" r="${r}" fill="${col}" opacity="${0.35+0.65*Math.min(1,n.visit_count/4)}"><title>N=${n.visit_count} Q=${n.mean_value.toFixed(2)} H=${n.entropy.toFixed(2)} d=${n.depth}</title></circle>`;
+    n.children.forEach(d); })(root);
+  g+='</g>'; svg.innerHTML=g;
+}
 
-            document.getElementById("stdVram").innerText = stdVramGb.toFixed(1) + " GB";
-            document.getElementById("flashVram").innerText = flashVramGb.toFixed(1) + " GB";
-            document.getElementById("savingsPct").innerText = savings.toFixed(1) + "% VRAM Reduction";
-        }
+$("run").onclick=async function(){
+  $("run").disabled=true; $("status").innerHTML="searching…";
+  const cfg={num_simulations:+$("sims").value, k_samples:+$("k").value, max_depth:+$("depth").value, entropy_alpha:0.15};
+  try{
+    const res=await runSearch($("problem").value, cfg, (sim,root)=>{ renderTree(root);
+      $("status").innerHTML=`simulation <b>${sim}/${cfg.num_simulations}</b> — building tree…`;
+      return new Promise(r=>setTimeout(r,90)); });
+    renderTree(res.root);
+    const fk=flashKV(res.root);
+    $("m-answer").textContent=res.answer;
+    $("m-conf").textContent=(res.conf*100).toFixed(0)+"%";
+    $("m-confbar").style.width=(res.conf*100)+"%";
+    $("m-calls").textContent=res.modelCalls;
+    $("m-depth").textContent=res.depthReached;
+    $("m-naive").textContent=fk.naive;
+    $("m-cow").textContent=fk.cow;
+    $("m-savedtok").textContent=fk.saved+" ("+fk.pct.toFixed(1)+"%)";
+    $("m-savedmb").textContent=fk.mb.toFixed(2)+" MB";
+    $("status").innerHTML=`done — ${res.terms.length} terminal trajectories, majority answer <b class="acc">${res.answer}</b>.`;
+  }catch(e){ $("status").textContent="error: "+e.message; }
+  $("run").disabled=false;
+};
 
-        function runSimulation() {
-            const out = document.getElementById("simOutput");
-            out.innerHTML = "🚀 Initializing HyperReason Engine v1.0.0...\n" +
-                "📝 Problem: If Janet has 3 boxes of 12 apples, gives away 5 and eats 2, how many left?\n" +
-                "⚙️ Config: Preset=HIGH_ACCURACY, FlashKV=ENABLED, MultiAgent=ENABLED, INT8=ENABLED\n\n" +
-                "⚡ HyperReason Engine — Monte Carlo Tree Search Visualization ⚡\n" +
-                "=================================================================\n" +
-                "ROOT: Question: Janet has 3 boxes of apples...\n" +
-                "├── [Depth 1] N=24 | Q=0.850 | H=0.35 -> \"Step 1: Calculate primary component = 3 * 12 = 36.\"\n" +
-                "│   ├── [Depth 2] N=18 | Q=0.890 | H=0.25 -> \"Step 2: Calculate total reductions = 5 + 2 = 7.\"\n" +
-                "│   │   └── [Depth 3] N=16 | Q=0.960 | H=0.15 -> \"Step 3: Calculate final remainder = 36 - 7 = \\boxed{29}.\"\n" +
-                "│   └── [Depth 2] N=6  | Q=0.720 | H=0.60 -> \"Step 2: Re-checking intermediate multiplication...\"\n" +
-                "└── [Depth 1] N=2  | Q=0.410 | H=0.82 -> \"Step 1: Parse alternate distribution constraints...\"\n" +
-                "=================================================================\n\n" +
-                "🏆 BEST REASONING TRAJECTORY FOUND:\n" +
-                "Step 1: Calculate primary component = 3.0 * 12.0 = 36.0.\n" +
-                "Step 2: Calculate total reductions = 5.0 + 2.0 = 7.0.\n" +
-                "Step 3: Calculate final remainder = 36.0 - 7.0 = \\boxed{29.0}.\n\n" +
-                "📊 METRICS: Consensus Confidence: 96.4% | FlashKV Saved VRAM: 1.84 GB (84.8% reduction) | Multi-Agent Audits: 24 | INT8 Compression: 50.0%";
-        }
-    </script>
+// initial render
+$("run").click();
+</script>
 </body>
 </html>
