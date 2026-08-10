@@ -33,7 +33,7 @@ class TransformersBackend:
         if not _OK:
             raise ImportError(
                 "TransformersBackend requires PyTorch + transformers. "
-                "Install with: pip install hyper-reason[transformers]"
+                "Install with: pip install torch transformers"
             )
         self.model_name = model_name
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)

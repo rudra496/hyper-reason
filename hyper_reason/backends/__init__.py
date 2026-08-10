@@ -15,7 +15,7 @@ from .mock_backend import MockBackend
 from .glm_backend import GLMBackend
 from .ollama_backend import OllamaBackend
 
-try:  # optional extra: pip install hyper-reason[transformers]
+try:  # optional: pip install torch transformers
     from .transformers_backend import TransformersBackend
 except Exception:  # pragma: no cover
     TransformersBackend = None  # type: ignore[assignment]

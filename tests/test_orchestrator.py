@@ -4,7 +4,7 @@ behavior of the graph, not a mocked/stubbed outcome.
 """
 
 import pytest
-pytest.importorskip("langgraph")  # optional extra: pip install hyper-reason[orchestrator]
+pytest.importorskip("langgraph")  # optional: pip install langgraph pydantic
 
 from hyper_reason.backends.mock_backend import MockBackend
 from hyper_reason.engine.config import SearchConfig

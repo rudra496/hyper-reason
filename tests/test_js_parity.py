@@ -2,7 +2,7 @@
 
 Runs the shipped docs/engine.js under Node and asserts its pure functions match the Python
 implementations on shared inputs. If this passes, the in-browser demo computes the same
-arithmetic as `pip install hyper-reason`. Skips if Node is unavailable.
+arithmetic as the installed package. Skips if Node is unavailable.
 """
 
 import json

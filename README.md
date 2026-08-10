@@ -31,10 +31,12 @@ projects KV-cache savings from real token counts — with an eval you can re-run
 ## 1-line quickstart
 
 ```bash
-pip install -e .            # or: pip install hyper-reason
+pip install git+https://github.com/rudra496/hyper-reason
 export ANTHROPIC_BASE_URL=https://api.z.ai/api/anthropic   # any Anthropic-compatible gateway
 export ANTHROPIC_API_KEY=...
 ```
+> **Note:** the PyPI name `hyper-reason` is an unrelated project. Install from GitHub as above
+> (or `pip install hyperreason` once published under that name). Import is `hyper_reason`.
 ```python
 from hyper_reason import wrap_model, GLMBackend
 
