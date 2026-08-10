@@ -23,7 +23,8 @@ try:
 except Exception:
     TransformersBackend = None
 
-PORT = 8085
+PORT = 8088
+socketserver.TCPServer.allow_reuse_address = True
 
 HTML_PAGE = """<!DOCTYPE html>
 <html lang="en">
