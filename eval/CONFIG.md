@@ -10,8 +10,10 @@
 ## Dataset
 - **Source:** `openai/gsm8k`, `main` config, **test** split (1319 problems; real GSM8K, not a
   hand-written list).
-- **Subset size (N):** **50** problems — the first 50 of the test split (deterministic, no
-  cherry-picking). Clearly labeled "N=50 subset of GSM8K test".
+- **Subset size (N):** **20** problems — the first 20 of the test split (deterministic, no
+  cherry-picking). Clearly labeled "N=20 subset of GSM8K test". (The script supports `--n`
+  for larger reproducible runs.) *Amended 2026-08-10 from N=50 for gateway cost/time — see
+  EVAL_CHANGELOG.md.*
 - **Answer parsing:** official GSM8K final answer = the integer after the last `#### ` marker in
   the reference. Model answer extracted via `extract_boxed` → last-number fallback →
   `__unparsable__` bucket (never silently counts as a disagreement).
@@ -25,12 +27,12 @@
 ## Search config (SearchConfig defaults, pinned)
 | field | value |
 |---|---|
-| num_simulations | 24 |
-| max_depth | 4 |
-| k_samples | 4 |
+| num_simulations | 6 |
+| max_depth | 3 |
+| k_samples | 2 |
 | temperature | 0.7 |
 | top_p | 1.0 |
-| max_tokens_per_step | 128 |
+| max_tokens_per_step | 160 |
 | c_puct | 1.414 |
 | entropy_alpha | 0.15 |
 | entropy_source | sample_diversity_entropy (K samples; no logprobs via Z.AI gateway) |
@@ -46,8 +48,8 @@ Problem: {problem}
 ## Methods compared (reported as a labeled table, never a single flashy number)
 1. **Greedy (T=0)** — one sample, no search. Baseline.
 2. **Self-consistency (no tree)** — K=4 samples at T=0.7, majority vote, no MCTS.
-3. **AE-MCTS (HyperReason)** — full search with the config above.
-4. **Projected VRAM (FlashKV simulator)** — defaults; labeled "projected, no real GPU".
+3. **AE-MCTS (HyperReason)** — full search with the config above (sims=6, k=2, depth=3).
+4. **Projected VRAM (FlashKV simulator)** — over the AE-MCTS tree; labeled "projected, no real GPU".
 
 ## Per-problem fields recorded (raw JSONL)
 `{idx, problem, reference_answer, method, trajectory, model_responses[], extracted_answer,
@@ -61,6 +63,6 @@ accuracy, mean tokens/problem, mean latency/problem, mean sims/problem, % unpars
 - Re-running with the same config + seed MUST reproduce the JSONL within gateway nondeterminism.
 
 ## Honest disclosure string (must accompany any headline)
-*"GSM8K-mini, N=50 (first 50 of test split), proposer glm-4.6 / judge glm-4.7 via Z.AI gateway,
-T=0.7, K=4, depth≤4, sims≤24. Entropy = sample-diversity proxy (no logprobs). VRAM = projected
-simulator (no real GPU). Not a claim of SOTA."*
+*"GSM8K-mini, N=20 (first 20 of test split), proposer glm-4.6 via Z.AI gateway. Greedy: T=0,
+1 sample. SC: T=0.7, K=4, no tree. AE-MCTS: T=0.7, k=2, depth≤3, sims≤6; entropy = sample-diversity
+proxy (no logprobs). VRAM = projected simulator (no real GPU). Not a claim of SOTA."*

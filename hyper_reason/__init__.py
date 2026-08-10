@@ -27,6 +27,13 @@ from .engine import (
 )
 from .engine.mcts import ReasonEngine, TreeNode
 from .engine.flashkv import FlashKVSimulator
+
+# Optional: the LangGraph multi-agent orchestrator (needs the [orchestrator] extra).
+try:  # pragma: no cover
+    from .orchestrator import build_graph, run as run_orchestrator
+except Exception:  # langgraph not installed -> core stays importable
+    build_graph = None  # type: ignore[assignment]
+    run_orchestrator = None  # type: ignore[assignment]
 from .wrapper import wrap_model, WrappedReasoningModel
 from .exporters import TreeTraceExporter
 from .terminal_visualizer import TreeVisualizer
