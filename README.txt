@@ -7,7 +7,7 @@ MCTS over model-generated candidates, picks the answer by self-consistency, and
 projects KV-cache savings from real per-node token counts.
 
 Quickstart:
-    pip install git+https://github.com/rudra496/hyper-reason
+    pip install hypermcts
     export ANTHROPIC_BASE_URL=https://api.z.ai/api/anthropic
     export ANTHROPIC_API_KEY=...
     python -c "from hyper_reason import wrap_model, GLMBackend; \

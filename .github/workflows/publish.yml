@@ -1,8 +1,8 @@
 name: publish
-# Publishes to PyPI as `hyperreason` via Trusted Publishing (OIDC) — NO token or password.
+# Publishes to PyPI as `hypermcts` via Trusted Publishing (OIDC) — NO token or password.
 # Requires a one-time setup on pypi.org: Account → Publishing → add a pending publisher:
 #   GitHub user/repo: rudra496/hyper-reason
-#   workflow: .github/workflows/publish.yml   environment: pypi   project: hyperreason
+#   workflow: .github/workflows/publish.yml   environment: pypi   project: hypermcts
 on:
   push:
     tags: ["v*"]
