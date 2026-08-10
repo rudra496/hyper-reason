@@ -1,0 +1,25 @@
+backend=glm:glm-4.6 is_live=True | N=20 | methods=['greedy', 'sc', 'mcts']
+writing -> E:\lab\hyper-reason\eval\runs\20260810-210422.jsonl
+  [  0/20] ref=18.0 {'greedy': '✓', 'sc': '✓', 'mcts': '✓'}
+  [  1/20] ref=3.0 {'greedy': '✓', 'sc': '✓', 'mcts': '✓'}
+  [  2/20] ref=70000.0 {'greedy': '✓', 'sc': '✗', 'mcts': '✗'}
+  [  3/20] ref=540.0 {'greedy': '✓', 'sc': '✓', 'mcts': '✓'}
+  [  4/20] ref=20.0 {'greedy': '✗', 'sc': '✓', 'mcts': '✓'}
+  [  5/20] ref=64.0 {'greedy': '✓', 'sc': '✓', 'mcts': '✓'}
+  [  6/20] ref=260.0 {'greedy': '✓', 'sc': '✓', 'mcts': '✓'}
+  [  7/20] ref=160.0 {'greedy': '✓', 'sc': '✓', 'mcts': '✓'}
+  [  8/20] ref=45.0 {'greedy': '✓', 'sc': '✓', 'mcts': '✓'}
+  [  9/20] ref=460.0 {'greedy': '✓', 'sc': '✓', 'mcts': '✓'}
+  [ 10/20] ref=366.0 {'greedy': '✓', 'sc': '✓', 'mcts': '✓'}
+  [ 11/20] ref=694.0 {'greedy': '✓', 'sc': '✓', 'mcts': '✓'}
+  [ 12/20] ref=13.0 {'greedy': '✓', 'sc': '✓', 'mcts': '✓'}
+  [ 13/20] ref=18.0 {'greedy': '✓', 'sc': '✓', 'mcts': '✗'}
+  [ 14/20] ref=60.0 {'greedy': '✓', 'sc': '✓', 'mcts': '✗'}
+  [ 15/20] ref=125.0 {'greedy': '✓', 'sc': '✓', 'mcts': '✓'}
+  [ 16/20] ref=230.0 {'greedy': '✓', 'sc': '✗', 'mcts': '✓'}
+  [ 17/20] ref=57500.0 {'greedy': '✓', 'sc': '✓', 'mcts': '✓'}
+  [ 18/20] ref=7.0 {'greedy': '✓', 'sc': '✓', 'mcts': '✓'}
+  [ 19/20] ref=6.0 {'greedy': '✓', 'sc': '✓', 'mcts': '✓'}
+
+done. raw -> E:\lab\hyper-reason\eval\runs\20260810-210422.jsonl
+aggregate: python eval/aggregate.py E:\lab\hyper-reason\eval\runs\20260810-210422.jsonl
