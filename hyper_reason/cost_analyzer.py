@@ -1,9 +1,8 @@
 """
-Cost & Hardware VRAM Efficiency Analyzer
-Author: Rudra Sarker (Rudra Sir) & Buggz
-License: MIT
+Cost & hardware efficiency estimator.
 
-Calculates exact VRAM savings, FLOP reduction metrics, and cloud compute cost savings ($/query).
+Estimates GPU-hour / dollar savings FROM USER-SUPPLIED measured inputs (vram saved, latency
+reduction, query volume). It does not measure anything itself — pass it real numbers from a run.
 """
 
 from typing import Dict, Any

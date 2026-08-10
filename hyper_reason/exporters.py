@@ -8,7 +8,7 @@ Exports MCTS reasoning tree trajectories to JSON, Markdown, LaTeX, or interactiv
 
 import json
 from typing import Dict, Any, List, Optional
-from .mcts_engine import TreeNode
+from .engine.mcts import TreeNode
 
 
 class TreeTraceExporter:

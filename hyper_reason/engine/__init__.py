@@ -14,13 +14,23 @@ from .math_utils import (
     extract_final_answer,
     normalize_step,
 )
+from .entropy import sample_diversity_entropy, priors_from_diversity, bucket_distribution
+from .verifier import self_consistency, LLMJudge
+from .mcts import ReasonEngine, TreeNode
 
 __all__ = [
     "SearchConfig",
+    "ReasonEngine",
+    "TreeNode",
     "shannon",
     "shannon_from_counts",
     "compute_salience",
     "extract_boxed",
     "extract_final_answer",
     "normalize_step",
+    "sample_diversity_entropy",
+    "priors_from_diversity",
+    "bucket_distribution",
+    "self_consistency",
+    "LLMJudge",
 ]

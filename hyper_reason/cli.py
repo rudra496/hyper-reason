@@ -1,73 +1,58 @@
-"""
-HyperReason Command Line Interface (CLI)
-CLI entrypoint for running test-time compute searches, tree visualizers, and benchmark suites.
-"""
+"""Command-line interface for HyperReason (v2 — real engine)."""
 
-import sys
+from __future__ import annotations
+
 import argparse
-import json
-from hyper_reason import ReasonEngine, SearchConfig, TreeVisualizer
+import sys
 
-def main():
-    parser = argparse.ArgumentParser(
-        description="HyperReason CLI: Autonomous Test-Time Compute Scaling & Dynamic KV-Cache Sparsification"
-    )
-    parser.add_argument(
-        "--prompt", "-p", 
-        type=str, 
-        default="Solve math problem: If a train travels at 60 mph for 2.5 hours, how far does it travel?",
-        help="Input problem prompt for reasoning search."
-    )
-    parser.add_argument(
-        "--simulations", "-s", 
-        type=int, 
-        default=32, 
-        help="Number of MCTS rollout simulations (default: 32)."
-    )
-    parser.add_argument(
-        "--depth", "-d", 
-        type=int, 
-        default=6, 
-        help="Maximum depth of reasoning tree (default: 6)."
-    )
-    parser.add_argument(
-        "--no-kv-pruning", 
-        action="store_true", 
-        help="Disable token-attentive KV-cache pruning."
-    )
-    parser.add_argument(
-        "--visualize", "-v", 
-        action="store_true", 
-        default=True,
-        help="Render ASCII tree search diagram in terminal."
-    )
+from .backends import MockBackend, GLMBackend, OllamaBackend
+from .config_presets import SearchPresets
+from .wrapper import wrap_model
 
-    args = parser.parse_args()
 
-    print("🚀 Initializing HyperReason Engine v1.0.0...")
-    print(f"📝 Prompt: {args.prompt}")
-    print(f"⚙️ Config: Simulations={args.simulations}, Max Depth={args.depth}, KV Pruning={not args.no_kv_pruning}\n")
+def _backend_for(name: str):
+    name = (name or "mock").lower()
+    if name == "mock":
+        return MockBackend()
+    if name == "glm":
+        return GLMBackend()
+    if name == "ollama":
+        return OllamaBackend()
+    raise SystemExit(f"unknown backend '{name}' (choose: mock, glm, ollama)")
 
-    config = SearchConfig(
-        num_simulations=args.simulations,
-        max_depth=args.depth,
-        prune_kv_cache=not args.no_kv_pruning
-    )
 
-    engine = ReasonEngine(config=config)
-    best_trace, root, meta = engine.run_mcts(args.prompt)
+def main(argv: list[str] | None = None) -> int:
+    p = argparse.ArgumentParser(prog="hyper-reason", description="HyperReason AE-MCTS reasoner")
+    p.add_argument("--problem", "-p", required=True, help="problem text to reason about")
+    p.add_argument("--backend", "-b", default="mock", choices=["mock", "glm", "ollama"])
+    p.add_argument("--preset", default="balanced",
+                   choices=["ultra_fast", "balanced", "high_accuracy"])
+    p.add_argument("--sims", type=int, default=None, help="override num_simulations")
+    p.add_argument("--no-tree", action="store_true", help="don't print the ASCII tree")
+    args = p.parse_args(argv)
 
-    if args.visualize and root is not None:
-        visualizer = TreeVisualizer(max_render_depth=4)
-        print(visualizer.render(root))
-        print("\n")
+    preset = {"ultra_fast": SearchPresets.ultra_fast, "balanced": SearchPresets.balanced,
+              "high_accuracy": SearchPresets.high_accuracy}[args.preset]()
+    if args.sims:
+        preset.num_simulations = args.sims
 
-    print("🏆 BEST REASONING TRAJECTORY FOUND:")
-    print("-" * 50)
-    print(best_trace)
-    print("-" * 50)
-    print("\n📊 SEARCH & COMPRESSION BENCHMARK METRICS:")
-    print(json.dumps(meta, indent=2))
+    model = wrap_model(_backend_for(args.backend), config=preset)
+    result = model.reason(args.problem)
+    m = result["metrics"]
+
+    print(f"\nBackend      : {m['backend']} (is_live={m['backend_is_live']})")
+    print(f"Boxed answer : {result['boxed_answer']}")
+    print(f"Confidence   : {result['confidence']}")
+    print(f"Model calls  : {m['model_calls']}  depth≤{m['max_depth_reached']}  "
+          f"tokens={m['total_prompt_tokens']}+{m['total_completion_tokens']}")
+    print(f"Entropy(src) : {m['config']['entropy_source']}")
+    print("\n--- Trajectory ---\n" + result["solution_trajectory"])
+
+    if not args.no_tree:
+        from .terminal_visualizer import TreeVisualizer
+        print("\n" + TreeVisualizer().render(result["tree"]))
+    return 0
+
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
