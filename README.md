@@ -7,6 +7,7 @@
 ### An honest, multi-provider Adaptive-Entropy MCTS test-time compute engine for LLMs — that **actually runs** and reports when it loses.
 
 [![tests](https://github.com/rudra496/hyper-reason/actions/workflows/ci.yml/badge.svg)](https://github.com/rudra496/hyper-reason/actions/workflows/ci.yml)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22118810.svg)](https://doi.org/10.5281/zenodo.22118810)
 [![PyPI version](https://img.shields.io/pypi/v/hypermcts.svg)](https://pypi.org/project/hypermcts/)
 [![Live demo](https://img.shields.io/badge/site-live%20demo-00e5ff)](https://rudra496.github.io/hyper-reason)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%20|%203.11%20|%203.12-blue)](#)
