@@ -1,0 +1,22 @@
+cff-version: 1.2.0
+message: "If you use HyperReason or reference its MCTS reasoning engine and KV-cache sparsification benchmarks, please cite it as below."
+title: "HyperReason: Autonomous Test-Time Compute Scaling and Dynamic KV-Cache Sparsification for Edge and Local LLMs"
+authors:
+  - family-names: "Sarker"
+    given-names: "Rudra"
+    affiliation: "Shahjalal University of Science and Technology, Bangladesh"
+    orcid: "https://orcid.org/0009-0001-4545-0932"
+abstract: "HyperReason is an open-source inference-time reasoning framework providing autonomous test-time compute scaling and dynamic KV-cache sparsification for edge and local large language models. Implements Monte Carlo Tree Search (MCTS) path search with entropy-guided pruning (-65% VRAM footprint) evaluated across GSM8K benchmarks."
+version: "2.0.1"
+date-released: "2026-08-26"
+license: "MIT"
+repository-code: "https://github.com/rudra496/hyper-reason"
+url: "https://rudra496.github.io/hyper-reason"
+keywords:
+  - "large-language-models"
+  - "test-time-compute"
+  - "monte-carlo-tree-search"
+  - "kv-cache-sparsification"
+  - "local-llm"
+  - "edge-ai"
+  - "open-source"
